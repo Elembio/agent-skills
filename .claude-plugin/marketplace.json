@@ -1,0 +1,17 @@
+{
+  "name": "elembio",
+  "owner": {
+    "name": "Element Biosciences"
+  },
+  "metadata": {
+    "description": "Element Biosciences plugins and agent skills for Claude Code and Cursor.",
+    "version": "1.0.0"
+  },
+  "plugins": [
+    {
+      "name": "cloud-sandbox",
+      "source": "./plugins/cloud-sandbox",
+      "description": "ElemBio Cloud sandbox MCP (production: mcp.usw2.elembio.io/sandbox)."
+    }
+  ]
+}

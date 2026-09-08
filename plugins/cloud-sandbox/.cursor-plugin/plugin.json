@@ -1,0 +1,21 @@
+{
+  "name": "cloud-sandbox",
+  "displayName": "ElemBio Cloud Sandbox",
+  "version": "0.1.0",
+  "description": "Connect Claude Code to the ElemBio Cloud sandbox MCP (production: mcp.usw2.elembio.io/sandbox).",
+  "author": {
+    "name": "Element Biosciences"
+  },
+  "homepage": "https://cloud.elembio.io",
+  "repository": "https://github.com/Elembio/agent-skills",
+  "keywords": [
+    "elembio",
+    "mcp",
+    "sandbox",
+    "python",
+    "remote-execution",
+    "code-interpreter",
+    "production"
+  ],
+  "mcpServers": "./mcp.json"
+}

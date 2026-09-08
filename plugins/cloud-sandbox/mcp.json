@@ -1,0 +1,10 @@
+{
+  "mcpServers": {
+    "elembio-sandbox": {
+      "url": "https://mcp.usw2.elembio.io/sandbox",
+      "headers": {
+        "X-Api-Key": "${ELEMBIO_API_KEY}"
+      }
+    }
+  }
+}
