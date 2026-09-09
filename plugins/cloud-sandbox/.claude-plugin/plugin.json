@@ -1,12 +1,13 @@
 {
   "name": "cloud-sandbox",
   "displayName": "ElemBio Cloud Sandbox",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "Connect Claude Code to the ElemBio Cloud sandbox MCP (production: mcp.usw2.elembio.io/sandbox).",
   "author": {
-    "name": "Element Biosciences"
+    "name": "Element Biosciences",
+    "url": "https://github.com/Elembio"
   },
-  "homepage": "https://cloud.elembio.io",
+  "homepage": "https://elembio.io",
   "repository": "https://github.com/Elembio/agent-skills",
   "keywords": [
     "elembio",
@@ -17,5 +18,14 @@
     "code-interpreter",
     "production"
   ],
-  "mcpServers": "./claude-mcp.json"
+  "mcpServers": "./claude-mcp.json",
+  "userConfig": {
+    "ELEMBIO_API_KEY": {
+      "type": "string",
+      "title": "ElemBio API key",
+      "description": "ElemBio platform API key for production (prefix ebp_). Generate it from your account settings at elembio.io.",
+      "sensitive": true,
+      "required": true
+    }
+  }
 }
