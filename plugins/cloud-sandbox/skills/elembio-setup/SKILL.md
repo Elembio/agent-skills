@@ -12,13 +12,13 @@ metadata:
 
 Two independent plugins make up the Element Biosciences Claude Code experience, distributed differently on purpose — don't collapse them into one flow or assume one implies the other:
 
-| | multiomics-preview | cloud-sandbox |
-|---|---|---|
-| Repo | private, `agent-skills-preview` | public, `agent-skills` |
-| Distribution | Enterprise Teams marketplace (org-pushed) | self-service |
-| `/plugin marketplace add` needed? | No — already known to every org member | Yes |
-| `/plugin install` needed? | Yes (one command) | Yes (one command) |
-| Secret | none | `ELEMBIO_API_KEY` (`ebp_...`, from account settings at elembio.io) |
+|                                   | multiomics-preview                        | cloud-sandbox                                                      |
+| --------------------------------- | ----------------------------------------- | ------------------------------------------------------------------ |
+| Repo                              | private, `agent-skills-preview`           | public, `agent-skills`                                             |
+| Distribution                      | Enterprise Teams marketplace (org-pushed) | self-service                                                       |
+| `/plugin marketplace add` needed? | No — already known to every org member    | Yes                                                                |
+| `/plugin install` needed?         | Yes (one command)                         | Yes (one command)                                                  |
+| Secret                            | none                                      | `ELEMBIO_API_KEY` (`ebp_...`, from account settings at elembio.io) |
 
 cloud-sandbox stays self-service deliberately: it carries a remote MCP connector, and org-pushed (team/managed) marketplace distribution would route it through the org's Connector policy, which requires admin-provisioned OAuth — incompatible with the per-user API-key model here. Don't suggest moving it to a team marketplace as a "fix" for install friction.
 
@@ -35,16 +35,20 @@ Never assume a clean slate or that "not installed" is the problem — check what
 `/plugin` commands are interactive CLI state changes — you cannot run them yourself. Tell the user the exact line to paste and wait for them to confirm it ran, rather than narrating the whole doc at once.
 
 **multiomics-preview missing:**
+
 ```
 /plugin install multiomics-preview@elembio-preview
 ```
+
 No marketplace-add step — it's an org-pushed team marketplace, already known to every member. If this reports no access, the fix is a team-membership assignment in the admin console, not a GitHub/repo permission — tell the user to ask IT for team assignment, not repo access.
 
 **cloud-sandbox missing:**
+
 ```
 /plugin marketplace add Elembio/agent-skills
 /plugin install cloud-sandbox@elembio
 ```
+
 After install, Claude Code should show an interactive prompt for `ELEMBIO_API_KEY`. The user needs a key (prefix `ebp_`) generated from account settings at elembio.io first. If no prompt appears, don't ask the user to paste the key into chat — tell them to run `/plugin configure` and pick cloud-sandbox instead; that's the path confirmed to store the key in the OS keychain, never in `settings.json`.
 
 ## Step 3 — verify the connection for real
@@ -72,9 +76,9 @@ Narrate every tool call as you make it — what it does, not just what it return
 
 ## Troubleshooting quick reference
 
-| Symptom | Likely cause | Fix |
-|---|---|---|
-| `/plugin install multiomics-preview@...` says no access | Not assigned to the right Enterprise team | Ask IT for team assignment — not repo access |
-| cloud-sandbox installs but no key prompt appears | Known Claude Code flakiness: `userConfig` prompts don't always fire on non-interactive enable paths | Run `/plugin configure`, pick cloud-sandbox |
-| Key entered but tools still 401 | Stale/incorrect key, or the prompt didn't persist it | Re-run `/plugin configure`; regenerate the key at elembio.io if it still fails |
-| Tools don't appear after configuring | MCP server registration needs a fresh session | Restart Claude Code |
+| Symptom                                                 | Likely cause                                                                                        | Fix                                                                            |
+| ------------------------------------------------------- | --------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------ |
+| `/plugin install multiomics-preview@...` says no access | Not assigned to the right Enterprise team                                                           | Ask IT for team assignment — not repo access                                   |
+| cloud-sandbox installs but no key prompt appears        | Known Claude Code flakiness: `userConfig` prompts don't always fire on non-interactive enable paths | Run `/plugin configure`, pick cloud-sandbox                                    |
+| Key entered but tools still 401                         | Stale/incorrect key, or the prompt didn't persist it                                                | Re-run `/plugin configure`; regenerate the key at elembio.io if it still fails |
+| Tools don't appear after configuring                    | MCP server registration needs a fresh session                                                       | Restart Claude Code                                                            |
