@@ -1,17 +1,17 @@
 {
-  "name": "elembio-preview",
+  "name": "elembio",
   "owner": {
     "name": "Element Biosciences"
   },
   "metadata": {
-    "description": "Preview channel for Element Biosciences plugins and agent skills for Claude Code and Cursor. Not released yet — content here graduates to the public elembio marketplace via a deliberate publish.",
+    "description": "Element Biosciences plugins and agent skills for Claude Code and Cursor.",
     "version": "1.0.0"
   },
   "plugins": [
     {
-      "name": "cloud-sandbox-preview",
-      "source": "./plugins/cloud-sandbox-preview",
-      "description": "ElemBio Cloud sandbox MCP (production: mcp.usw2.elembio.io/sandbox). Becomes cloud-sandbox@elembio when published."
+      "name": "cloud-sandbox",
+      "source": "./plugins/cloud-sandbox",
+      "description": "ElemBio Cloud sandbox MCP (production: mcp.usw2.elembio.io/sandbox)."
     }
   ]
 }
