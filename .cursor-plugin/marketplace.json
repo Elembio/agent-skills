@@ -5,7 +5,7 @@
   },
   "metadata": {
     "description": "Element Biosciences plugins and agent skills for Claude Code and Cursor.",
-    "version": "1.0.0"
+    "version": "1.1.0"
   },
   "plugins": [
     {

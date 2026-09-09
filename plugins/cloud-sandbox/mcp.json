@@ -4,7 +4,7 @@
       "type": "http",
       "url": "https://mcp.usw2.elembio.io/sandbox",
       "headers": {
-        "x-api-key": "${ELEMBIO_API_KEY:-}"
+        "x-api-key": "${ELEMBIO_API_KEY}"
       }
     }
   }
