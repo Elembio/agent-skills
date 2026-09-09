@@ -1,7 +1,7 @@
 {
   "name": "cloud-sandbox",
   "displayName": "ElemBio Cloud Sandbox",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "description": "Connect Claude Code to the ElemBio Cloud sandbox MCP (production: mcp.usw2.elembio.io/sandbox).",
   "author": {
     "name": "Element Biosciences",
@@ -19,6 +19,7 @@
     "production"
   ],
   "mcpServers": "./claude-mcp.json",
+  "skills": "./skills/",
   "userConfig": {
     "ELEMBIO_API_KEY": {
       "type": "string",
