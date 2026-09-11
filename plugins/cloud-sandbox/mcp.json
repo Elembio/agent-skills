@@ -3,8 +3,8 @@
     "elembio-sandbox": {
       "type": "http",
       "url": "https://mcp.usw2.elembio.io/sandbox",
-      "headers": {
-        "x-api-key": "${ELEMBIO_API_KEY}"
+      "auth": {
+        "CLIENT_ID": "T9GbDH6Kw8Fhwno7GNQQPAahhOz4qcmH"
       }
     }
   }

@@ -1,8 +1,8 @@
 {
   "name": "cloud-sandbox",
   "displayName": "ElemBio Cloud Sandbox",
-  "version": "0.2.0",
-  "description": "Connect Cursor to the ElemBio Cloud sandbox MCP (production: mcp.usw2.elembio.io/sandbox).",
+  "version": "0.4.0",
+  "description": "Connect Cursor to the ElemBio Cloud sandbox MCP with your ElemBio SSO login (production: mcp.usw2.elembio.io/sandbox).",
   "author": {
     "name": "Element Biosciences",
     "url": "https://github.com/Elembio"
@@ -17,16 +17,5 @@
     "remote-execution",
     "code-interpreter",
     "production"
-  ],
-  "variables": {
-    "type": "object",
-    "properties": {
-      "ELEMBIO_API_KEY": {
-        "type": "string",
-        "title": "ElemBio API key",
-        "description": "ElemBio platform API key for production (prefix ebp_). Generate it from your account settings at elembio.io."
-      }
-    },
-    "required": ["ELEMBIO_API_KEY"]
-  }
+  ]
 }
