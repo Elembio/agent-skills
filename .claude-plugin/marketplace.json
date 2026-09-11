@@ -5,13 +5,13 @@
   },
   "metadata": {
     "description": "Element Biosciences plugins and agent skills for Claude Code and Cursor.",
-    "version": "1.1.0"
+    "version": "1.2.0"
   },
   "plugins": [
     {
       "name": "cloud-sandbox",
       "source": "./plugins/cloud-sandbox",
-      "description": "ElemBio Cloud sandbox MCP (production: mcp.usw2.elembio.io/sandbox)."
+      "description": "ElemBio Cloud sandbox MCP, with browser login (production: mcp.usw2.elembio.io/sandbox)."
     }
   ]
 }

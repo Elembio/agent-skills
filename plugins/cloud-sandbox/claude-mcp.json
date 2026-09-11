@@ -3,8 +3,9 @@
     "elembio-sandbox": {
       "type": "http",
       "url": "https://mcp.usw2.elembio.io/sandbox",
-      "headers": {
-        "x-api-key": "${user_config.ELEMBIO_API_KEY}"
+      "oauth": {
+        "clientId": "T9GbDH6Kw8Fhwno7GNQQPAahhOz4qcmH",
+        "callbackPort": 8400
       }
     }
   }
