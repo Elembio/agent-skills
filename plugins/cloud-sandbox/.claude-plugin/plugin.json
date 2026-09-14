@@ -1,22 +1,32 @@
 {
   "name": "cloud-sandbox",
   "displayName": "ElemBio Cloud Sandbox",
-  "version": "0.4.1",
-  "description": "Connect Claude Code to the ElemBio Cloud sandbox MCP with your ElemBio SSO login (production: mcp.usw2.elembio.io/sandbox).",
+  "version": "0.5.0",
+  "description": "Remote compute plus your Element Biosciences cloud data for multiomics, QC, and spatial analysis \u2014 sign in with your ElemBio account.",
   "author": {
     "name": "Element Biosciences",
     "url": "https://github.com/Elembio"
   },
   "homepage": "https://elembio.io",
   "repository": "https://github.com/Elembio/agent-skills",
+  "license": "Apache-2.0",
+  "logo": "assets/logo.svg",
   "keywords": [
     "elembio",
+    "aviti",
+    "aviti24",
     "mcp",
     "sandbox",
-    "python",
     "remote-execution",
     "code-interpreter",
-    "production"
+    "multiomics",
+    "single-cell",
+    "spatial",
+    "transcriptomics",
+    "scanpy",
+    "anndata",
+    "spatialdata"
   ],
-  "mcpServers": "./claude-mcp.json"
+  "mcpServers": "./claude-mcp.json",
+  "skills": "./skills/"
 }
