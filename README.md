@@ -62,6 +62,11 @@ Marketplaces are added from the dashboard:
 Generate/manage your account access at [elembio.io](https://elembio.io). Nothing secret is
 stored in this repository.
 
+## Disclaimer
+
+This content is provided "as-is" without warranty of any kind. AI-generated output may contain
+inaccuracies. Review and verify all outputs before relying on them.
+
 ## License
 
 Licensed under the Apache License, Version 2.0. See [LICENSE](./LICENSE) and [NOTICE](./NOTICE).
