@@ -1,6 +1,6 @@
 ---
 name: sandbox-environment
-description: Use when working with Element Biosciences / AVITI / AVITI24 data — listing or resolving runs, executions, or cloud storage; downloading or mounting data; or running multiomics, single-cell, spatial, imaging, OPS, QC, or differential-expression analysis. Routes between the local `elembio` CLI (quick listing, metadata, small downloads) and the ElemBio Cloud sandbox MCP `elembio-sandbox` (for compute, or when no local CLI is available): create one sandbox and reuse it, mount cloud data in place with elembio-cli, and use the preinstalled analysis stack (spatialdata / scanpy / anndata / squidpy).
+description: Use when working with Element Biosciences / AVITI / AVITI24 data — listing or resolving runs, executions, or cloud storage; downloading or mounting data; or running multiomics, single-cell, spatial, imaging, OPS, QC, or differential-expression analysis. Routes between the local `elembio` CLI (quick listing, metadata, small downloads) and the ElemBio Cloud sandbox MCP `elembio-sandbox` (for compute, or when no local CLI is available): create one sandbox and reuse it, mount cloud data in place with elembio-cli, and drive the analysis with the Element Biosciences `multiomics` skills (QC, normalization, and modality-specific pipelines) on the preinstalled stack (spatialdata / scanpy / anndata / squidpy).
 metadata:
   version: 0.1.0
   author: elembio
@@ -8,9 +8,9 @@ metadata:
 
 # ElemBio Cloud Sandbox — Environment & Routing
 
-This skill gets you into the right environment with the user's data reachable. It does not
-restate analysis pipelines — hand those off to the multiomics analysis skills once data is
-loaded.
+This skill gets you into the right environment with the user's data reachable. The analysis
+itself is **driven by the Element Biosciences `multiomics` skills** — this skill hands off to
+them once data is loaded and does not restate their pipelines.
 
 ## Choosing an environment
 
@@ -65,11 +65,14 @@ the session mount — but prefer mounting Cloud data over uploading it.
 
 ## Running the analysis
 
-Once data is mounted, load the `.zarr` store with `Loader` and follow the multiomics analysis
-skills for the actual pipeline. If the `multiomics` plugin is installed, start at its `index`
-skill to pick the right specialist (run-quality-overview → cell-quality-control →
-normalization → the modality pipeline for what is present). This skill intentionally does not
-duplicate those steps.
+Analysis in the sandbox is **driven by the Element Biosciences `multiomics` skills** — do not
+improvise with generic single-cell / Scanpy defaults. Once data is mounted, load the `.zarr`
+store with `Loader`, then **start with the `multiomics` `index` skill**, which routes to the
+right specialist and platform order (it encodes AVITI24 / DISS conventions that generic
+defaults get wrong). Refer to it by name — it installs as a separate plugin, so relative file
+paths from here will not resolve. If the multiomics skills aren't available, install the
+Element Biosciences multiomics-skills plugin (or ask the user to) rather than substituting
+ad-hoc analysis. This skill deliberately does not duplicate those steps.
 
 ## Outputs
 
