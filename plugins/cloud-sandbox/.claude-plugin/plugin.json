@@ -2,7 +2,7 @@
   "name": "cloud-sandbox",
   "displayName": "ElemBio Cloud Sandbox",
   "version": "0.5.0",
-  "description": "Remote compute plus your Element Biosciences cloud data for multiomics, QC, and spatial analysis \u2014 sign in with your ElemBio account.",
+  "description": "Remote compute plus your Element Biosciences cloud data for multiomics, QC, and spatial analysis. Sign in with your ElemBio account.",
   "author": {
     "name": "Element Biosciences",
     "url": "https://github.com/Elembio"
@@ -23,8 +23,6 @@
     "single-cell",
     "spatial",
     "transcriptomics",
-    "scanpy",
-    "anndata",
     "spatialdata"
   ],
   "mcpServers": "./claude-mcp.json",
