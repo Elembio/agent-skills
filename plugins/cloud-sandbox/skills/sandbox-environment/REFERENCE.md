@@ -111,6 +111,20 @@ The Python kernel is long-lived within a session: variables, imports, loaded dat
 - **Reload only when** the kernel was reset (state lost — see [RECOVERY.md](RECOVERY.md)), you
   need a pristine copy after an in-place mutation, or a genuinely different store is required.
 
+**Inherited state is inherited memory.** A sandbox reused from earlier work — especially one
+resumed from hibernation — comes back holding whatever that work left in the namespace, which
+can be many GB of the limit before you load anything. Reuse is still the right default — that
+live namespace is the thing of value — but **check `get_status.resource_usage` against the size
+of the store you are about to open**, and say what you found if headroom is thin. Two ways out,
+in order of preference:
+
+- **Free the specific objects** you no longer need (`del`, then `gc.collect()`) — keeps the
+  mounts and installed packages.
+- **`create_sandbox` fresh** when the old namespace is both large and irrelevant. Prefer this
+  outright when a stale object could silently contaminate a result (a leftover `adata` or
+  `loader` bound to a different run); a subprocess `execute_command` cannot be contaminated that
+  way, but `execute_code` can.
+
 ### Idle hibernation and resume
 
 An idle sandbox is **hibernated** after roughly an hour: its memory image (variables, imports,
@@ -153,6 +167,34 @@ checkpoint — raise the timeout or use `backed="r"`. Only suspect the mount if
 
 ## Executing code: budgets, detach, and polling
 
+### Know the cost before you send it
+
+Decide a call's expected duration *before* calling, because that decision is what you owe the
+user out loud (see **Keeping the user in the loop** in [SKILL.md](SKILL.md)) and what sets
+`timeout_seconds`. Rough costs over a `--disk-cache-size 0` mount:
+
+| Operation | Expect |
+|---|---|
+| `elembio … mount` | ~1 s (detached; the FUSE mount is live on return) |
+| `ls` / `find` over a mount | well under a second per listing — but each one is an S3 round trip |
+| `Loader(<store>)` + `available_tables` | **seconds, even on a 45 GB `.zarr.zip`** — it opens the archive index, it does not read tables |
+| **First `load_tables(..., lazy=True)` per store** | **tens of seconds to minutes — this is the expensive call.** Parses every table's metadata over FUSE, uncached. Measured at 98 s on a 45 GB `.zarr.zip`, which detached. |
+| Reading from a table already loaded | seconds — the first `load_tables` is what paid for it |
+| Reading `obs` / `obsm` columns, groupbys over them | seconds |
+| A full pass over `X` | not measured here; a 6-of-95-chunk sample was ~3 s warm, so budget minutes cold and sample unless you need every cell |
+| Cold checkpoint reload | throughput-bound, see [Checkpointing](#checkpointing) |
+
+Two consequences worth internalizing:
+
+- **Lazy is not free, and the first touch pays for the rest.** Constructing the `Loader` is
+  cheap and tells you nothing about what follows — the bill arrives on the first
+  `load_tables`, even with `lazy=True`. Budget *that* call generously and expect everything
+  after it to be fast. Reversing the two is the easy mistake: a 1-second `Loader` reads as
+  "this store is fast".
+- **Reach for `obs` / `obsm` before `X`.** Most run-level QC (depth, missingness, per-tile
+  counts, spatial coordinates) is precomputed in `obsm` and costs seconds. Going to `X` for a
+  number that already exists in `obsm` turns a 3-second call into a full-store scan.
+
 - **`execute_code` / `execute_command`** take an optional `timeout_seconds` (default **120**,
   max **7200**). This is the run's max wall-clock, not a transport limit.
 - **One call runs at a time.** Batch independent steps into one cell.
@@ -162,9 +204,21 @@ checkpoint — raise the timeout or use `backed="r"`. Only suspect the mount if
   - **Detached metadata** `{status: "running", run_id, sandbox_id, poll_with: "get_results"}` →
     expected for a long run, not an error. The run survives past the idle window whether or not
     you poll. Then:
+    - **Tell the user it detached before you poll.** One line naming the work and that it is
+      running server-side. A detach is the single most disorienting thing the user cannot see:
+      from their side a silent poll loop and a hung session look identical.
     - **Poll `get_results(sandbox_id, run_id)`** — returns `{status: "running"}` while in flight,
       then the same stdout/success/artifacts shape a short run returns. Space polls seconds
       apart; **retrieval is multi-turn** — submit in one turn, fetch in a later one if needed.
+      **Do not narrate each poll** — one line at detach, one line when it lands. If the wait
+      passes a couple of minutes, or you check `resource_usage` and something looks wrong
+      (memory climbing toward the limit, a run far past its expected duration), say so then
+      rather than at the end.
+    - **Lead with the result when it lands.** The user has been waiting on this one — give them
+      the headline number before you move on to the next call.
+    - **A long wait is useful time, not dead time.** Read the skill you will need next, or
+      check the docs for the step after this one, while the run is in flight — but say that is
+      what you are doing, so the interleaved tool calls are legible.
     - **Recover a lost `run_id`** from `get_status.kernel_status.active_run_id` while the sandbox
       is still `busy` (it is absent when idle). `get_status.last_run` is the historical handle if
       you lost it entirely.

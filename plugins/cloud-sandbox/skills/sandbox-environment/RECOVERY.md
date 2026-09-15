@@ -51,7 +51,7 @@ field, and correction — apply and re-send; they are **not** health signals, so
 
 | Signal | What it means | Action | Recreate? |
 |---|---|---|---|
-| `sandbox_id is required` | dropped parameter, usually | re-send with the id you hold; `list_sandboxes` if lost | only if you own none |
+| `sandbox_id is required` | dropped parameter, usually | re-send with the id you hold | only if the id is genuinely lost |
 | `session X not found` | session expired | `create_sandbox`, retry | yes |
 | `not authorized for session` | API-key / ownership mismatch | `create_sandbox` | yes |
 | `registry lookup failed` | registry didn't answer; no verdict | keep the id, retry in ~10 s | **no** |

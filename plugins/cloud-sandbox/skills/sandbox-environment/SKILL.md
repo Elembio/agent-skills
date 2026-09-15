@@ -2,7 +2,7 @@
 name: sandbox-environment
 description: Use when working with Element Biosciences / AVITI / AVITI24 data — listing or resolving runs, executions, or cloud storage; downloading or mounting data; or running multiomics, single-cell, spatial, imaging, OPS, QC, or differential-expression analysis. Routes between the local `elembio` CLI (quick listing, metadata, small downloads) and the ElemBio Cloud sandbox MCP `elembio-sandbox` (for compute, or when no local CLI is available): create one sandbox and reuse it, mount cloud data in place with elembio-cli, and drive the analysis with the Element Biosciences `multiomics` skills (QC, normalization, and modality-specific pipelines) on the preinstalled stack (spatialdata / scanpy / anndata / squidpy).
 metadata:
-  version: 0.5.0
+  version: 0.6.0
   author: elembio
 ---
 
@@ -20,8 +20,8 @@ you reach the situation they cover, not before:
   no-credentials dead-ends.
 - **[REFERENCE.md](REFERENCE.md)** — how to work efficiently in the sandbox: the preinstalled
   stack and installing packages, filesystem and the writable budget, where outputs go and how to
-  confirm they are durable, reusing kernel state across turns, checkpointing, and long-running
-  detached runs.
+  confirm they are durable, reusing kernel state across turns, checkpointing, long-running
+  detached runs, and what to say to the user while one is in flight.
 - **[RECOVERY.md](RECOVERY.md)** — what to do when a call times out, errors, or returns an
   unexpected shape. The single most important rule lives there: a timeout is **not** a dead
   sandbox, and needlessly recreating one throws away loaded data.
@@ -64,26 +64,50 @@ companion files:
 
 ## Sandbox lifecycle
 
-- **`create_sandbox` once** per body of work, then reuse the returned `sandbox_id` on every
-  subsequent call. The kernel keeps variables, imports, and installed packages between calls —
-  never create a second sandbox for the same task.
+- **`create_sandbox` once** per body of work, and whenever you hold no `sandbox_id` — it is the
+  only way in, as there is no tool that lists or adopts an existing sandbox. Then reuse the
+  returned id on every subsequent call: the kernel keeps variables, imports, and installed
+  packages between calls, so never create a second sandbox for the same task.
 - **A `status: "INSTANCE_PROVISIONING"` response is success, not an error.** The `sandbox_id`
-  is valid and reserved for you; compute is starting (a cold host boot is ~2–3 minutes). Wait
-  `retry_after_seconds`, then poll `get_status` with that id until `status` is
-  `"INSTANCE_READY"`. Do **not** call `create_sandbox` again — a second call starts a second
-  sandbox. The response carries its own stopping rule (`max_wait_seconds`, `on_timeout`); honor
+  is valid and reserved for you; compute is starting (usually seconds; a cold host boot can
+  reach ~2–3 minutes). Wait `retry_after_seconds`, then poll `get_status` with that id until
+  `status` is `"INSTANCE_READY"`. Do **not** call `create_sandbox` again — a second call starts
+  a second sandbox. The response carries its own stopping rule (`max_wait_seconds`, `on_timeout`); honor
   it. See [RECOVERY.md](RECOVERY.md) for the full provisioning / restore handling.
 - **`execute_code`** runs Python in the persistent kernel; **`execute_command`** runs bash
   (use it for all `elembio …` invocations). **One call runs at a time** — batch independent
   steps into a single cell rather than issuing many small calls back-to-back.
-- To reuse a sandbox from earlier context, probe `get_status` first (a liveness/resource probe,
-  **not** a namespace check). A hibernated sandbox auto-resumes on the next call.
-- **`list_sandboxes`** enumerates the sandboxes under your account — use it to recover a
-  `sandbox_id` you lost, or to audit what is live, before creating a new one.
+- To reuse a sandbox whose id you still hold, probe `get_status` first (a liveness/resource
+  probe, **not** a namespace check). A hibernated sandbox auto-resumes on the next call; one
+  that reports dead or is not found means `create_sandbox`.
 - Only `destroy_sandbox` when the user explicitly asks to end the session.
 - **Subagents get their own sandbox.** Never hand your `sandbox_id` to a subagent (it has no
   credentials for your session and a separate `/data/session`); pass mount metadata in the
   brief so it re-mounts in its own sandbox, and have it return results as text.
+
+## Keeping the user in the loop
+
+The sandbox is remote and invisible: the user sees your messages, not your tool calls. **They
+cannot tell a 98-second metadata load from a hung session.** So narrate — a one-line
+what-and-why *before* a call, a one-line outcome *after*. Skip it only for genuinely trivial or
+internal steps (introspecting a shape, retrying a one-line syntax fix).
+
+The three cases where silence actually costs the user something — narrate these even when the
+step feels internal:
+
+| Case | Say this |
+|---|---|
+| **Anything that will take a while** — a first `load_tables` over FUSE, a full pass over `X`, a big install (*not* a mount; that is ~1 s) | What you are about to do and roughly why it is slow, *before* you call it. Then the outcome. |
+| **A detached run** (`status: "running"`) | That it detached and what it is working on — *before* the first `get_results`. Never poll in silence; see [REFERENCE.md](REFERENCE.md). |
+| **A discovery result that changes the plan** | Say it when you learn it, not in the final summary. "This run has no execution, so the store ships inside the run itself" is a course correction the user should see happen. |
+
+Two habits that make this cheap rather than chatty:
+
+- **Predict the cost out loud when you raise `timeout_seconds`.** Passing `timeout_seconds=1800`
+  is you declaring the call may run 30 minutes — tell the user that, not just the tool.
+- **Say what you sampled.** When you subset to keep a call affordable — N of M chunks, a cell
+  subsample, one well of many — state it in the same message as the number it produced, not only
+  in a closing caveat. A median from 5% of the cells is a different claim than a median.
 
 ## Getting the user's Cloud data in
 
