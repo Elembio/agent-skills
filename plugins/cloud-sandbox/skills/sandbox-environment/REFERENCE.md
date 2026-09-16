@@ -79,9 +79,12 @@ Confirming durability and handing files back:
 - Each artifact carries **`s3_status`** — `present` (landed durably), `syncing` (still
   uploading), or `unknown` / absent (no verdict; do **not** read as "gone"). Only `present`
   guarantees the file survives the session.
-- **`fetch_artifact <path>`** mints a short-lived HTTPS URL for the user. For an
-  inline-renderable image it also returns a `display_markdown` snippet (`![name](url)`) — paste
-  that verbatim on its own line so the chat host renders it.
+- **`fetch_artifact <path>`** mints a short-lived HTTPS URL for the user, and — when the
+  bytes fit in the response — the image itself as a content block your client renders inline;
+  describe what it shows rather than re-posting the link. When the bytes are omitted,
+  `image_content_omitted` says why (`read_failed` is transient — retry; `too_large` and
+  `unsupported_type` mean a different file is needed to see it), and `url` still delivers the
+  original file untouched.
 
 Budget hygiene:
 
@@ -254,7 +257,7 @@ Printing a large result is usually the wrong shape anyway: write it to
   (`n_jobs`), and Numba `parallel=True` all use the session's vCPUs. `/dev/shm` is deliberately
   tiny (64 MiB) and is **not** scratch — put scratch in `/tmp`.
 - **matplotlib is headless** (`MPLBACKEND=Agg`). Save figures into `$ELEMBIO_EXECUTION_OUTPUTS_DIR`
-  and surface them with `fetch_artifact`'s `display_markdown`.
+  and surface them with `fetch_artifact`.
 - **Make runs reproducible** — set seeds (`np.random.seed`, `sc.settings.seed`) and print key
   library versions and parameters.
 
