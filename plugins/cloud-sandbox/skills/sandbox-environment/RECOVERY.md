@@ -118,7 +118,7 @@ Call `get_status` and read only the liveness fields:
   - absent → no verdict (older worker / not probed); not a fault either way.
   - **Caveat:** `session_storage_state` reports on the *mount*, not on any specific write. To
     confirm a particular file is durable, check its artifact `s3_status == present`, `fsync` it,
-    or read it back via `download_artifact`.
+    or read it back via `fetch_artifact`.
 - **Idle and responsive but nothing finishes** → read `kernel_status.fuse_waiting`. `0` rules
   the filesystem out. Non-zero alone is not "stuck" (a healthy large read has requests in
   flight) — poll again: a count that does not drain while `cpu_percent` stays idle is a wedged

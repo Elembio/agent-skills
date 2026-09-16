@@ -2,7 +2,7 @@
 name: sandbox-environment
 description: "Use when working with Element Biosciences / AVITI / AVITI24 data — listing or resolving runs, executions, or cloud storage; downloading or mounting data; or running multiomics, single-cell, spatial, imaging, OPS, QC, or differential-expression analysis. Routes between the local `elembio` CLI (quick listing, metadata, small downloads) and the ElemBio Cloud sandbox MCP `elembio-sandbox` (for compute, or when no local CLI is available): create one sandbox and reuse it, mount cloud data in place with elembio-cli, and drive the analysis with the Element Biosciences `multiomics` skills (QC, normalization, and modality-specific pipelines) on the preinstalled stack (spatialdata / scanpy / anndata / squidpy)."
 metadata:
-  version: 0.7.0
+  version: 0.7.2
   author: elembio
 ---
 
@@ -60,7 +60,7 @@ companion files:
    kernel state across turns; checkpoint expensive state to `/data/session` (see
    [REFERENCE.md](REFERENCE.md)).
 5. **Return results** — write figures/tables to `$ELEMBIO_EXECUTION_OUTPUTS_DIR`, then
-   `download_artifact` the path and paste an image's `display_markdown` verbatim.
+   `fetch_artifact` the path and describe what it shows to the user.
 
 ## Sandbox lifecycle
 
@@ -135,6 +135,6 @@ ad-hoc analysis. This skill deliberately does not duplicate those steps.
 - Write durable outputs to **`$ELEMBIO_EXECUTION_OUTPUTS_DIR`** (a fresh per-call directory);
   exactly those files come back as `artifacts`. Use `/tmp` for scratch.
 - Confirm a file landed with its artifact **`s3_status: present`**; surface a file — or an
-  inline image — to the user with **`download_artifact`**.
-- The handling rules (revise-by-new-file, the full `s3_status` values, `download_artifact`'s
-  `display_markdown` snippet) are in **[REFERENCE.md](REFERENCE.md)**.
+  inline image — to the user with **`fetch_artifact`**.
+- The handling rules (revise-by-new-file, the full `s3_status` values, and when `fetch_artifact`
+  omits an image's bytes) are in **[REFERENCE.md](REFERENCE.md)**.

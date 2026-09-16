@@ -71,7 +71,7 @@ Rules that follow from per-call attribution:
   keeps rendering the file it referenced, so overwriting rewrites history. A revised plot is a
   new file in the current call's output dir.
 - **Read a prior call's output by the absolute path that call returned** — it stays valid.
-- **Only `download_artifact` a path you received in a call's `artifacts`.** A failed
+- **Only `fetch_artifact` a path you received in a call's `artifacts`.** A failed
   `execute_code` writes no artifact, so a path "from" a failed call points at nothing.
 
 Confirming durability and handing files back:
@@ -79,9 +79,12 @@ Confirming durability and handing files back:
 - Each artifact carries **`s3_status`** — `present` (landed durably), `syncing` (still
   uploading), or `unknown` / absent (no verdict; do **not** read as "gone"). Only `present`
   guarantees the file survives the session.
-- **`download_artifact <path>`** mints a short-lived HTTPS URL for the user. For an
-  inline-renderable image it also returns a `display_markdown` snippet (`![name](url)`) — paste
-  that verbatim on its own line so the chat host renders it.
+- **`fetch_artifact <path>`** mints a short-lived HTTPS URL for the user, and — when the
+  bytes fit in the response — the image itself as a content block your client renders inline;
+  describe what it shows rather than re-posting the link. When the bytes are omitted,
+  `image_content_omitted` says why (`read_failed` is transient — retry; `too_large` and
+  `unsupported_type` mean a different file is needed to see it), and `url` still delivers the
+  original file untouched.
 
 Budget hygiene:
 
@@ -236,7 +239,7 @@ output to a spill file and returns a `stdout_spill` artifact naming the path.
 
 - **Nothing is truncated.** Read the file instead of re-running — a follow-up `execute_code`
   can open the path and slice it (`open(p).read(200_000)`, `itertools.islice`), or
-  `download_artifact` fetches it for the user.
+  `fetch_artifact` fetches it for the user.
 - **Do not re-run the code to "get the output back"** — a re-run costs the same compute and
   spills again.
 - **`size_bytes` is absent on the spill artifact** — absent means "not reported", not "empty";
@@ -254,7 +257,7 @@ Printing a large result is usually the wrong shape anyway: write it to
   (`n_jobs`), and Numba `parallel=True` all use the session's vCPUs. `/dev/shm` is deliberately
   tiny (64 MiB) and is **not** scratch — put scratch in `/tmp`.
 - **matplotlib is headless** (`MPLBACKEND=Agg`). Save figures into `$ELEMBIO_EXECUTION_OUTPUTS_DIR`
-  and surface them with `download_artifact`'s `display_markdown`.
+  and surface them with `fetch_artifact`.
 - **Make runs reproducible** — set seeds (`np.random.seed`, `sc.settings.seed`) and print key
   library versions and parameters.
 
