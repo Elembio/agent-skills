@@ -1,0 +1,38 @@
+---
+description: Enforces the three irreversible sandbox mistakes, cost-and-destructiveness safety, and routing into the onboarding skills. Governs all interactions with the elembio-sandbox MCP.
+alwaysApply: true
+---
+
+# ElemBio sandbox lifecycle
+
+This workspace uses the ElemBio Cloud sandbox MCP (`elembio-sandbox`) for remote analysis. Runtime detail lives on the server. Open it when you need it; do not restate it here.
+
+- `elembio-skill://sandbox/sandbox-environment/SKILL.md`
+- `elembio-skill://sandbox/sandbox-environment/MOUNTING.md`
+- `elembio-skill://sandbox/sandbox-environment/REFERENCE.md`
+- `elembio-skill://sandbox/sandbox-environment/RECOVERY.md`
+
+If the host does not support `resources/*`, call `read_skill` with the same URI.
+
+## Three rules that cost real work if you break them
+
+1. **Create one sandbox per body of work.** `create_sandbox` is the only way in. Reuse the returned `sandbox_id`. A second create starts a second sandbox and discards the loaded namespace.
+2. **`status: "INSTANCE_PROVISIONING"` is success, not an error.** The id is valid. Poll `get_status`. Do not create again.
+3. **A timeout is not a dead kernel.** Read the signal in the server-published `RECOVERY.md` before you act. Waiting a minute is cheap. A needless recreate throws away the analysis.
+
+## Safety model
+
+Cheap reads are free. Cost and destruction need consent.
+
+- Cheap reads (list, resolve, `Loader`, `available_tables`): just do them.
+- A long call: say the predicted cost out loud before you send it.
+- `destroy_sandbox` and any write into ElemBio Cloud: confirm first, then wait for approval.
+
+## Onboarding, expansion, and maintenance
+
+- **Intro / new users / fresh installs** ("what is the sandbox", "how do I get started", "onboard elembio", "set me up"): trigger **sandbox-onboard**.
+- **Quick demo / first win** ("show me how the sandbox works", "give me a quick demo", "smallest example"): trigger **sandbox-demo**. Route to onboard first if the server is not connected.
+- **What can I ask of this run** ("what else can I do", "suggest analyses", "explore this run"): trigger **sandbox-explore**.
+- **Health checks, audits, troubleshooting**: trigger **sandbox-status**. Do not suggest status until sandbox tools are available.
+
+Local CLI versus sandbox routing lives in the plugin `sandbox-environment` skill. Analysis pipelines live in the `multiomics` `index` skill.
