@@ -37,13 +37,13 @@ Sign-in is browser OAuth against the user's ElemBio account. There is no API key
 
 Inspect the sandbox tools and the installed skills. The result picks the branch:
 
-| Result | Branch |
-| --- | --- |
-| Sandbox tools work, multiomics skills are present, and at least one run or storage connection is reachable | **Healthy** |
-| Sandbox tools work, but the multiomics skills are absent | **Companion missing** |
-| Sandbox tools work and multiomics is present, but listing runs and storage returns nothing | **No reachable data** |
-| Tools exist, but calls return `not authorized for session` or equivalent auth failure | **Auth broken** |
-| No `elembio-sandbox` tools at all | **Not connected** |
+| Result                                                                                                     | Branch                |
+| ---------------------------------------------------------------------------------------------------------- | --------------------- |
+| Sandbox tools work, multiomics skills are present, and at least one run or storage connection is reachable | **Healthy**           |
+| Sandbox tools work, but the multiomics skills are absent                                                   | **Companion missing** |
+| Sandbox tools work and multiomics is present, but listing runs and storage returns nothing                 | **No reachable data** |
+| Tools exist, but calls return `not authorized for session` or equivalent auth failure                      | **Auth broken**       |
+| No `elembio-sandbox` tools at all                                                                          | **Not connected**     |
 
 Detect multiomics by looking for its `index` skill (also `spatialdata-loading-and-access`, `elembio-cloud-data-access`). Absence of those names is **Companion missing**, not a sandbox fault.
 
@@ -79,7 +79,6 @@ The plugin is installed, but the MCP server has not been authenticated. This is 
 1. Tell the user the plugin is installed but needs a connection.
 2. Try `mcp_auth` on the ElemBio sandbox server. If that succeeds, skip to step 5.
 3. If `mcp_auth` fails or is unavailable, give client-specific steps:
-
    - **Cursor:** Settings → Cursor Settings → Tools & MCP → **Connect** next to `elembio-sandbox`. Or press Cmd+Shift+P and search for "MCP".
    - **Claude Desktop:** Customize → Connectors → ElemBio Cloud sandbox → **Connect**. Complete the browser sign-in.
    - **Claude Code:** The client opens the browser sign-in on first use of a sandbox tool. `/mcp` shows connection status.
@@ -96,7 +95,6 @@ The public `elembio` marketplace ships `cloud-sandbox`. The analysis skills curr
 
 1. Tell the user they are connected, and that analysis guidance is a separate plugin.
 2. Give the install for their client:
-
    - **Claude Code:**
 
      ```
@@ -129,23 +127,23 @@ Then stop. Do not invent a demo against empty storage.
 
 New skills and newly authenticated MCP tools do not appear until the client re-reads its config.
 
-| Client | How to reload |
-| --- | --- |
-| Cursor | Cmd+Shift+P → "Reload Window" |
-| Claude Desktop | Quit and reopen the app |
-| Claude Code | Run `/mcp` to check status. Restart the session if tools or skills are still missing |
-| Windsurf | Cmd+Shift+P → "Reload Window" |
+| Client         | How to reload                                                                        |
+| -------------- | ------------------------------------------------------------------------------------ |
+| Cursor         | Cmd+Shift+P → "Reload Window"                                                        |
+| Claude Desktop | Quit and reopen the app                                                              |
+| Claude Code    | Run `/mcp` to check status. Restart the session if tools or skills are still missing |
+| Windsurf       | Cmd+Shift+P → "Reload Window"                                                        |
 
 ## MCP config by client
 
 Use this only when the user needs to inspect or recreate the server entry.
 
-| Client | Config file location | Scope |
-| --- | --- | --- |
-| Cursor | `.cursor/mcp.json` (project) or `~/.cursor/mcp.json` (global) | Project / Global |
-| Claude Desktop | `~/Library/Application Support/Claude/claude_desktop_config.json` (macOS) | Global |
-| Claude Code | `.mcp.json` (project) or `~/.claude/mcp.json` (global) | Project / Global |
-| Windsurf | `~/.codeium/windsurf/mcp_config.json` | Global |
+| Client         | Config file location                                                      | Scope            |
+| -------------- | ------------------------------------------------------------------------- | ---------------- |
+| Cursor         | `.cursor/mcp.json` (project) or `~/.cursor/mcp.json` (global)             | Project / Global |
+| Claude Desktop | `~/Library/Application Support/Claude/claude_desktop_config.json` (macOS) | Global           |
+| Claude Code    | `.mcp.json` (project) or `~/.claude/mcp.json` (global)                    | Project / Global |
+| Windsurf       | `~/.codeium/windsurf/mcp_config.json`                                     | Global           |
 
 ## Gotchas
 

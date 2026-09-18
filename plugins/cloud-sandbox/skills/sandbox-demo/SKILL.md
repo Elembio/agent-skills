@@ -27,7 +27,7 @@ If the user says "show me," lean here. If they have not connected yet, route to 
 
 This is the corollary to "never a write action for a first Zapier demo."
 
-`Loader` plus `available_tables` returns in seconds, even on a large `.zarr.zip`. The first `load_tables` is tens of seconds to minutes. **Stop before `load_tables`.** Do not pass over `X`. Do not cluster, normalize, or plot.
+`Loader` plus `available_tables` returns in seconds, even on a large `.zarr.zip`. The first `load_tables` is tens of seconds to minutes. **Stop before** `load_tables`**.** Do not pass over `X`. Do not cluster, normalize, or plot.
 
 If you want a count, take it from metadata the `Loader` already exposed (table names, shapes in `available_tables`). Do not materialize a table to prove the sandbox works.
 
@@ -51,7 +51,7 @@ Narrate before you create ("Starting a sandbox — first boot can take a couple 
 
 ## Step 3: Pick a run
 
-List runs with the local `elembio` CLI when it is present. Otherwise list from inside the sandbox via `execute_command`. Do not restate CLI flags; the multiomics **`elembio-cloud-data-access`** skill owns that surface.
+List runs with the local `elembio` CLI when it is present. Otherwise list from inside the sandbox via `execute_command`. Do not restate CLI flags; the multiomics `elembio-cloud-data-access` skill owns that surface.
 
 Lead with a short list the user can react to — run name, id, date — rather than asking them to recall an id cold.
 
@@ -102,12 +102,12 @@ Then offer one next move, not a buffet:
 
 ## Gotchas
 
-- **Never call `load_tables` in this skill.** That is the first expensive touch. The demo is over at `available_tables`.
-- **Do not create a second sandbox on `INSTANCE_PROVISIONING`.** The id is already yours. Poll `get_status`.
+- **Never call** `load_tables` **in this skill.** That is the first expensive touch. The demo is over at `available_tables`.
+- **Do not create a second sandbox on** `INSTANCE_PROVISIONING`**.** The id is already yours. Poll `get_status`.
 - **Do not pick a several-SDO run "to be thorough".** The selection prompt is the friction we are removing.
-- **Do not copy the store into `/data/session`.** Mount and read in place. See `MOUNTING.md`.
+- **Do not copy the store into** `/data/session`**.** Mount and read in place. See `MOUNTING.md`.
 - **Do not dump the Quickstart, the cost table, or recovery signals into the user-facing copy.** Cite the server files; keep this chat short.
-- **If the mount or `Loader` fails, do not improvise.** Open `RECOVERY.md` / `MOUNTING.md` and apply them. Then come back.
+- **If the mount or** `Loader` **fails, do not improvise.** Open `RECOVERY.md` / `MOUNTING.md` and apply them. Then come back.
 
 ## Tone
 

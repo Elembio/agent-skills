@@ -31,13 +31,13 @@ Require a live `Loader` (or create one sandbox, mount, and construct it — foll
 
 Map table names to modalities. Do not invent a modality that is not present.
 
-| Table signal | Treat as |
-| --- | --- |
-| `ThreePrimeUntargeted` | 3′ untargeted |
-| `SpecializedTargeted` that is a true OPS identity library | OPS |
-| Imaging / CellPaint / ProteinIF / morphology tables | Imaging |
-| Legacy Transcript / Protein barcoding panels | Legacy targeted |
-| Two or more of the above | Multimodal — also offer the multimodal questions |
+| Table signal                                              | Treat as                                         |
+| --------------------------------------------------------- | ------------------------------------------------ |
+| `ThreePrimeUntargeted`                                    | 3′ untargeted                                    |
+| `SpecializedTargeted` that is a true OPS identity library | OPS                                              |
+| Imaging / CellPaint / ProteinIF / morphology tables       | Imaging                                          |
+| Legacy Transcript / Protein barcoding panels              | Legacy targeted                                  |
+| Two or more of the above                                  | Multimodal — also offer the multimodal questions |
 
 If `available_tables` is empty or `Loader` failed, stop and diagnose via **sandbox-status**, not by guessing.
 
@@ -51,9 +51,9 @@ For each question, output three lines — not a table:
 
 > **[What the question answers, in plain language]**
 >
-> Say to me: *"[exact prompt]"*. I'll [what comes back, one line].
+> Say to me: _"[exact prompt]"_. I'll [what comes back, one line].
 >
-> *Skill:* [multiomics skill name]
+> _Skill:_ [multiomics skill name]
 
 Do not list more than 6 at once. If you have more, give 4, then offer "want more?"
 
@@ -71,103 +71,103 @@ Do not read the user every entry. Pick the ones their tables support.
 
 > **Run health before you touch cells**
 >
-> Say to me: *"How does this run look — cells per well, tiles, any wells I should drop?"* I'll give well / tile health for the modalities that are present, with no cell filtering yet.
+> Say to me: _"How does this run look — cells per well, tiles, any wells I should drop?"_ I'll give well / tile health for the modalities that are present, with no cell filtering yet.
 >
-> *Skill:* `run-quality-overview`
+> _Skill:_ `run-quality-overview`
 
 > **What was actually plated**
 >
-> Say to me: *"What conditions, replicates, and cell lines are in this run?"* I'll infer design from `WellLabel` and flag when condition is confounded with well.
+> Say to me: _"What conditions, replicates, and cell lines are in this run?"_ I'll infer design from `WellLabel` and flag when condition is confounded with well.
 >
-> *Skill:* `experiment-design`
+> _Skill:_ `experiment-design`
 
 > **Where things live in the object**
 >
-> Say to me: *"Where are counts, QC metrics, and spatial coordinates in this AnnData?"* I'll point at the canonical `obs` / `var` / `obsm` slots for the modalities we have.
+> Say to me: _"Where are counts, QC metrics, and spatial coordinates in this AnnData?"_ I'll point at the canonical `obs` / `var` / `obsm` slots for the modalities we have.
 >
-> *Skill:* `anndata-structure-reference`
+> _Skill:_ `anndata-structure-reference`
 
 ### 3′ untargeted (`ThreePrimeUntargeted`)
 
 > **Cell QC on 3′ depth, not UMIs**
 >
-> Say to me: *"Filter low-quality cells on this 3′ transcriptome."* I'll run AVITI24 cell QC (`compute_qc_metrics` → `filter_cells`) and talk in depth / polony counts, not droplet-seq UMIs.
+> Say to me: _"Filter low-quality cells on this 3′ transcriptome."_ I'll run AVITI24 cell QC (`compute_qc_metrics` → `filter_cells`) and talk in depth / polony counts, not droplet-seq UMIs.
 >
-> *Skill:* `cell-quality-control`
+> _Skill:_ `cell-quality-control`
 
 > **Normalize counts, then reduce**
 >
-> Say to me: *"Normalize this 3′ table and show me a UMAP."* I'll normalize the count modality only, then PCA / UMAP.
+> Say to me: _"Normalize this 3′ table and show me a UMAP."_ I'll normalize the count modality only, then PCA / UMAP.
 >
-> *Skill:* `normalization-strategies` then `dimensionality-reduction`
+> _Skill:_ `normalization-strategies` then `dimensionality-reduction`
 
 > **End-to-end 3′ pipeline**
 >
-> Say to me: *"Run the 3′ untargeted pipeline on this store."* I'll follow the specialist order for `ThreePrimeUntargeted`.
+> Say to me: _"Run the 3′ untargeted pipeline on this store."_ I'll follow the specialist order for `ThreePrimeUntargeted`.
 >
-> *Skill:* `3prime-untargeted-pipeline`
+> _Skill:_ `3prime-untargeted-pipeline`
 
 > **Differential expression with replicates**
 >
-> Say to me: *"Which genes differ between [condition A] and [condition B]?"* I'll do pseudobulk DE if there are ≥2 biological replicates per condition.
+> Say to me: _"Which genes differ between [condition A] and [condition B]?"_ I'll do pseudobulk DE if there are ≥2 biological replicates per condition.
 >
-> *Skill:* `pseudobulk-differential-expression`
+> _Skill:_ `pseudobulk-differential-expression`
 
 ### OPS (true Optical Pooled Screening identity library)
 
 > **Confirm it is real OPS**
 >
-> Say to me: *"Is this SpecializedTargeted table a real OPS library, or a housekeeping panel?"* I'll distinguish identity libraries from QC gene panels that also label as OPS.
+> Say to me: _"Is this SpecializedTargeted table a real OPS library, or a housekeeping panel?"_ I'll distinguish identity libraries from QC gene panels that also label as OPS.
 >
-> *Skill:* `ops-pipeline`
+> _Skill:_ `ops-pipeline`
 
 > **OPS identity and area QC**
 >
-> Say to me: *"QC and assign identities for this OPS library."* I'll follow the OPS specialist (area-only cell QC, not 3′ MT filters).
+> Say to me: _"QC and assign identities for this OPS library."_ I'll follow the OPS specialist (area-only cell QC, not 3′ MT filters).
 >
-> *Skill:* `ops-pipeline`
+> _Skill:_ `ops-pipeline`
 
 ### Imaging / CellPaint / Protein IF
 
 > **Morphology inventory**
 >
-> Say to me: *"What's in the imaging — channels, stains, any IF?"* I'll inventory morphology stains and protein IF channels before any scaling.
+> Say to me: _"What's in the imaging — channels, stains, any IF?"_ I'll inventory morphology stains and protein IF channels before any scaling.
 >
-> *Skill:* `imaging-pipeline`
+> _Skill:_ `imaging-pipeline`
 
 > **Imaging QC and MAD-z features**
 >
-> Say to me: *"Build the imaging feature matrix and tell me which scaling reference you used."* I'll run S/B, localization, and MAD-z with the design-dependent reference (control wells / global / per-well).
+> Say to me: _"Build the imaging feature matrix and tell me which scaling reference you used."_ I'll run S/B, localization, and MAD-z with the design-dependent reference (control wells / global / per-well).
 >
-> *Skill:* `imaging-pipeline`
+> _Skill:_ `imaging-pipeline`
 
 > **Well fluorescence and a cell close-up**
 >
-> Say to me: *"Show me well fluorescence and a representative cell."* I'll plot the plate and a `plot_cell` close-up.
+> Say to me: _"Show me well fluorescence and a representative cell."_ I'll plot the plate and a `plot_cell` close-up.
 >
-> *Skill:* `spatial-multimodal-visualization`
+> _Skill:_ `spatial-multimodal-visualization`
 
 ### Legacy targeted (Transcript / Protein barcoding only)
 
 > **Legacy panel path**
 >
-> Say to me: *"This looks like a barcoding panel — treat it as legacy targeted."* I'll use the legacy specialist, not the current 3′ / OPS / imaging-first pipelines.
+> Say to me: _"This looks like a barcoding panel — treat it as legacy targeted."_ I'll use the legacy specialist, not the current 3′ / OPS / imaging-first pipelines.
 >
-> *Skill:* `legacy-targeted-pipeline`
+> _Skill:_ `legacy-targeted-pipeline`
 
 ### Multimodal (two or more present)
 
 > **Align before you join**
 >
-> Say to me: *"Prepare the present modalities for joint analysis."* I'll apply the right transform per modality (count normalize vs imaging MAD-z) before concatenating.
+> Say to me: _"Prepare the present modalities for joint analysis."_ I'll apply the right transform per modality (count normalize vs imaging MAD-z) before concatenating.
 >
-> *Skill:* `multimodal-data-preparation`
+> _Skill:_ `multimodal-data-preparation`
 
 > **Joint embedding**
 >
-> Say to me: *"Make a joint UMAP across the modalities we have."* I'll follow integrated analysis only after alignment.
+> Say to me: _"Make a joint UMAP across the modalities we have."_ I'll follow integrated analysis only after alignment.
 >
-> *Skill:* `integrated-analysis`
+> _Skill:_ `integrated-analysis`
 
 ## Handling edge cases
 

@@ -10,12 +10,12 @@ metadata:
 
 This skill picks the environment and keeps you out of the three irreversible mistakes. Runtime detail lives on the MCP server. Read it when you reach that situation; do not copy it here.
 
-| URI | Read when |
-| --- | --- |
-| `elembio-skill://sandbox/sandbox-environment/SKILL.md` | Quickstart, lifecycle, narration, outputs |
-| `elembio-skill://sandbox/sandbox-environment/MOUNTING.md` | Mount flags, `.zarr.zip`, `request_upload` |
-| `elembio-skill://sandbox/sandbox-environment/REFERENCE.md` | Stack, writable budget, detach / poll, cost |
-| `elembio-skill://sandbox/sandbox-environment/RECOVERY.md` | Timeouts, provisioning, kernel and mount faults |
+| URI                                                        | Read when                                       |
+| ---------------------------------------------------------- | ----------------------------------------------- |
+| `elembio-skill://sandbox/sandbox-environment/SKILL.md`     | Quickstart, lifecycle, narration, outputs       |
+| `elembio-skill://sandbox/sandbox-environment/MOUNTING.md`  | Mount flags, `.zarr.zip`, `request_upload`      |
+| `elembio-skill://sandbox/sandbox-environment/REFERENCE.md` | Stack, writable budget, detach / poll, cost     |
+| `elembio-skill://sandbox/sandbox-environment/RECOVERY.md`  | Timeouts, provisioning, kernel and mount faults |
 
 If the host does not support `resources/*`, call `read_skill` with the same URI.
 
@@ -23,12 +23,12 @@ If the host does not support `resources/*`, call `read_skill` with the same URI.
 
 The sandbox (`elembio-sandbox` MCP) is a remote persistent-kernel Python environment with the analysis stack and `elembio-cli` preinstalled. It acts as the signed-in user. A local `elembio` CLI, when present, handles lightweight data access with no spin-up. Check for it first — `which elembio && elembio whoami` — then route:
 
-| Task | Use |
-| --- | --- |
-| List / resolve runs, executions, or storage; read metadata; small download | **Local `elembio` CLI** if present — fastest, no spin-up |
+| Task                                                                                | Use                                                                            |
+| ----------------------------------------------------------------------------------- | ------------------------------------------------------------------------------ |
+| List / resolve runs, executions, or storage; read metadata; small download          | **Local `elembio` CLI** if present — fastest, no spin-up                       |
 | Compute — QC, normalize, cluster, DE, imaging, or any multiomics / spatial analysis | **Sandbox** — the stack is preinstalled and kernel state persists across calls |
-| No local CLI available | **Sandbox** — it ships `elembio-cli`; run `elembio …` via `execute_command` |
-| Read cloud data in place (no copy) | **Either** — `elembio … mount` works from the local CLI or inside the sandbox |
+| No local CLI available                                                              | **Sandbox** — it ships `elembio-cli`; run `elembio …` via `execute_command`    |
+| Read cloud data in place (no copy)                                                  | **Either** — `elembio … mount` works from the local CLI or inside the sandbox  |
 
 **When both are viable, ask the user** whether to work locally or in the sandbox. Skip the question only when the choice is forced: no local CLI, or a preference the user already stated.
 
