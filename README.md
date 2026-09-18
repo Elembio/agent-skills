@@ -24,10 +24,34 @@ need compute for it:
 The sandbox acts as you (the signed-in user) and mounts your cloud data in place — no copying,
 no local setup. If you also have the `elembio` CLI installed locally, it stays handy for quick
 run/metadata listing and small downloads; the sandbox covers everything else, including when
-the CLI is not installed. The bundled `sandbox-environment` skill tells the agent when and how
-to use the sandbox for these scenarios, and hands the analysis itself off to the Element
-Biosciences `multiomics` skills. Install the `multiomics` plugin alongside this one for full
-analysis guidance (QC, normalization, and the modality-specific pipelines).
+the CLI is not installed.
+
+After you install, tell your agent **`onboard elembio`**. It authenticates the MCP, checks for
+the companion analysis plugin, and routes the next step.
+
+The bundled `sandbox-environment` skill tells the agent when to use the local CLI versus the
+sandbox. Analysis itself is driven by the Element Biosciences `multiomics` skills. Install the
+`multiomics-preview` plugin from `Elembio/agent-skills-preview` alongside this one for QC,
+normalization, and the modality-specific pipelines.
+
+### Features
+
+- **Guided onboarding** (`onboard elembio`): connect the MCP, install the companion plugin, and
+  pick the next step.
+- **Live demo** (`show me how the sandbox works`): one run, mounted, tables listed.
+- **Explore this run** (`what can I ask of this run`): questions the present modalities support,
+  then a handoff to the matching multiomics skill.
+- **Health checks** (`sandbox status`): connection, waste, and a router into recovery.
+
+### How the skills fit together
+
+```mermaid
+flowchart LR
+    onboard[sandbox-onboard] --> demo[sandbox-demo]
+    demo --> explore[sandbox-explore]
+    explore --> multiomics[multiomics index]
+    onboard -.-> status[sandbox-status]
+```
 
 ## Install
 
@@ -37,7 +61,7 @@ analysis guidance (QC, normalization, and the modality-specific pipelines).
 2. Install **`cloud-sandbox`**.
 3. Open the connector and **Connect** to complete the browser sign-in (OAuth).
 
-The bundled skill then loads automatically and is used when relevant.
+The bundled skills then load automatically. Tell your agent **`onboard elembio`** to finish setup.
 
 ### Claude Code
 
@@ -47,7 +71,7 @@ The bundled skill then loads automatically and is used when relevant.
 ```
 
 Authenticate on first use of a sandbox tool — Claude Code opens the browser sign-in
-automatically (`/mcp` shows connection status).
+automatically (`/mcp` shows connection status). Then tell the agent **`onboard elembio`**.
 
 ### Cursor
 
@@ -57,6 +81,7 @@ Marketplaces are added from the dashboard:
    Repo**, and give it `Elembio/agent-skills`.
 2. Open **Customize**, find `cloud-sandbox`, and **Install**.
 3. Connect the `elembio-sandbox` MCP server and complete the browser sign-in.
+4. Tell your agent **`onboard elembio`**.
 
 ## Authentication
 
