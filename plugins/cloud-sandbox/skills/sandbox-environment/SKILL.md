@@ -41,7 +41,7 @@ with no spin-up. Check for it first — `which elembio && elembio whoami` — th
 | No local CLI available | **Sandbox** — it ships `elembio-cli`; run `elembio …` via `execute_command` |
 | Read cloud data in place (no copy) | **Either** — `elembio … mount` works from the local CLI or inside the sandbox |
 
-Wherever the CLI runs, `runs list` and `executions list` return **newest first**: runs by last update, executions by creation. For "recent" or "latest", ask for `--max-items N`. Don't fetch everything with `--max-items 0` and sort it yourself. Keep `--max-items 0` for filters that must return every match, such as a name lookup. For those, quote names for an exact match: `--filter 'name:"<run-name>"'`.
+Wherever the CLI runs, `runs list` and `executions list` return **newest first**: runs by last update, executions by creation. For "recent" or "latest", bound the window with a time filter and cap the count, e.g. `elembio runs list --filter 'time_created>=7d' --max-items 10`. A relative date means "now minus that long", so `>=7d` is *within* the last 7 days; `<7d` is *older* than 7 days. If the window comes back empty, widen it (`30d`, `90d`). Don't fetch everything with `--max-items 0` and sort it yourself. Keep `--max-items 0` for filters that must return every match, such as a name lookup. For those, quote names for an exact match: `--filter 'name:"<run-name>"'`.
 
 **When both are viable, ask the user** whether to work locally or in the sandbox — for running
 `elembio-cli` and for compute alike — rather than guessing. Skip the question only when the
