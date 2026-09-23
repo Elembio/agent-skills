@@ -2,7 +2,7 @@
 name: sandbox-environment
 description: "Use when working with Element Biosciences / AVITI / AVITI24 data — listing or resolving runs, executions, or cloud storage; downloading or mounting data; or running multiomics, single-cell, spatial, imaging, OPS, QC, or differential-expression analysis. Routes between the local `elembio` CLI (quick listing, metadata, small downloads) and the ElemBio Cloud sandbox MCP `elembio-sandbox` (for compute, or when no local CLI is available): create one sandbox and reuse it, mount cloud data in place with elembio-cli, and drive the analysis with the Element Biosciences `multiomics` skills (QC, normalization, and modality-specific pipelines) on the preinstalled stack (spatialdata / scanpy / anndata / squidpy)."
 metadata:
-  version: 0.7.3
+  version: 0.7.4
   author: elembio
 ---
 
@@ -43,9 +43,10 @@ with no spin-up. Check for it first — `which elembio && elembio whoami` — th
 
 Wherever the CLI runs, `runs list` and `executions list` return **newest first**: runs by last update, executions by creation. For "recent" or "latest", bound the window with a time filter and cap the count, e.g. `elembio runs list --filter 'time_created>=7d' --max-items 10`. A relative date means "now minus that long", so `>=7d` is *within* the last 7 days; `<7d` is *older* than 7 days. If the window comes back empty, widen it (`30d`, `90d`). Don't fetch everything with `--max-items 0` and sort it yourself. Keep `--max-items 0` for filters that must return every match, such as a name lookup. For those, quote names for an exact match: `--filter 'name:"<run-name>"'`.
 
-**When both are viable, ask the user** whether to work locally or in the sandbox — for running
-`elembio-cli` and for compute alike — rather than guessing. Skip the question only when the
-choice is forced: no local CLI (use the sandbox), or a preference the user already stated.
+**When multiple viable paths exist, ask the user** which to take — don't default to the most
+comprehensive one. This applies to local-vs-sandbox routing, instrument data vs. execution SDO,
+and which modalities or conditions to focus on. Skip the question only when the choice is forced
+(no local CLI, only one data source available) or a preference the user already stated.
 
 ## Quickstart (sandbox path)
 
@@ -56,12 +57,16 @@ companion files:
    back `INSTANCE_PROVISIONING`, poll `get_status` until `INSTANCE_READY`.
 2. **Mount the data** with `execute_command` (see [MOUNTING.md](MOUNTING.md)), e.g.
    `elembio runs mount <run-id> /runs/<run-id> --disk-cache-size 0`.
-3. **Load it** with `execute_code`:
+3. **Present what you found and confirm the approach.** Summarize the run structure (wells,
+   conditions, modalities, any running or completed executions) and ask the user what they want
+   to analyze and how — especially when multiple paths exist (instrument data now vs. a pending
+   execution's SDO, which modalities to focus on, full pipeline vs. QC only).
+4. **Load it** with `execute_code`:
    `from elembio_spatialdata_analysis.load import Loader; loader = Loader("<the .zarr under /runs/<run-id>>")`.
-4. **Drive the analysis** with the `multiomics` skills (start at their `index`). Reuse live
+5. **Drive the analysis** with the `multiomics` skills (start at their `index`). Reuse live
    kernel state across turns; checkpoint expensive state to `/data/session` (see
    [REFERENCE.md](REFERENCE.md)).
-5. **Return results** — write figures/tables to `$ELEMBIO_EXECUTION_OUTPUTS_DIR`, then
+6. **Return results** — write figures/tables to `$ELEMBIO_EXECUTION_OUTPUTS_DIR`, then
    `fetch_artifact` the path and describe what it shows to the user.
 
 ## Sandbox lifecycle
@@ -102,6 +107,7 @@ step feels internal:
 | **Anything that will take a while** — a first `load_tables` over FUSE, a full pass over `X`, a big install (*not* a mount; that is ~1 s) | What you are about to do and roughly why it is slow, *before* you call it. Then the outcome. |
 | **A detached run** (`status: "running"`) | That it detached and what it is working on — *before* the first `get_results`. Never poll in silence; see [REFERENCE.md](REFERENCE.md). |
 | **A discovery result that changes the plan** | Say it when you learn it, not in the final summary. "This run has no execution, so the store ships inside the run itself" is a course correction the user should see happen. |
+| **A running or recently completed execution exists** | Surface it and ask whether to wait for its SDO or proceed with instrument data — this changes the analysis path, not just the timeline. |
 
 Two habits that make this cheap rather than chatty:
 
