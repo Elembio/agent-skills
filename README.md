@@ -22,10 +22,9 @@ need compute for it:
   `squidpy`, …) and `elembio-cli` **preinstalled**.
 
 The sandbox acts as you (the signed-in user) and mounts your cloud data in place — no copying,
-no local setup. If you also have the `elembio` CLI installed locally, it stays handy for quick
-run/metadata listing and small downloads; the sandbox covers everything else, including when
-the CLI is not installed. The bundled `sandbox-environment` skill tells the agent when and how
-to use the sandbox for these scenarios, and hands the analysis itself off to the Element
+no local setup. Everything runs in the sandbox, from listing runs to the full analysis, so you
+don't need the `elembio` CLI installed locally. The bundled `sandbox-environment` skill tells
+the agent how to use the sandbox for these scenarios, and hands the analysis itself off to the Element
 Biosciences `multiomics` skills. Install the `multiomics` plugin alongside this one for full
 analysis guidance (QC, normalization, and the modality-specific pipelines).
 

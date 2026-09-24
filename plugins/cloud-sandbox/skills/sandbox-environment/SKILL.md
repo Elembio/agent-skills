@@ -1,14 +1,14 @@
 ---
 name: sandbox-environment
-description: "Use when working with Element Biosciences / AVITI / AVITI24 data — listing or resolving runs, executions, or cloud storage; downloading or mounting data; or running multiomics, single-cell, spatial, imaging, OPS, QC, or differential-expression analysis. Routes between the local `elembio` CLI (quick listing, metadata, small downloads) and the ElemBio Cloud sandbox MCP `elembio-sandbox` (for compute, or when no local CLI is available): create one sandbox and reuse it, mount cloud data in place with elembio-cli, and drive the analysis with the Element Biosciences `multiomics` skills (QC, normalization, and modality-specific pipelines) on the preinstalled stack (spatialdata / scanpy / anndata / squidpy)."
+description: "Use when working with Element Biosciences / AVITI / AVITI24 data through the ElemBio Cloud sandbox MCP (`elembio-sandbox`) — listing or resolving runs, executions, or cloud storage; mounting data; or running multiomics, single-cell, spatial, imaging, OPS, QC, or differential-expression analysis. Everything runs inside the sandbox: create one and reuse it, run `elembio …` there via `execute_command` (preinstalled and signed in as the user), mount cloud data in place, and drive the analysis with the Element Biosciences `multiomics` skills (QC, normalization, and modality-specific pipelines) on the preinstalled stack (spatialdata / scanpy / anndata / squidpy)."
 metadata:
-  version: 0.7.5
+  version: 0.8.0
   author: elembio
 ---
 
-# ElemBio Cloud Sandbox — Environment & Routing
+# ElemBio Cloud Sandbox — Environment
 
-This skill gets you into the right environment with the user's data reachable. The analysis
+This skill gets you into the sandbox with the user's data reachable. The analysis
 itself is **driven by the Element Biosciences `multiomics` skills** — this skill hands off to
 them once data is loaded and does not restate their pipelines.
 
@@ -26,29 +26,29 @@ you reach the situation they cover, not before:
   unexpected shape. The single most important rule lives there: a timeout is **not** a dead
   sandbox, and needlessly recreating one throws away loaded data.
 
-## Choosing an environment
+## Where everything runs
 
 The sandbox (`elembio-sandbox` MCP) is a remote persistent-kernel Python environment with the
 standard analysis stack (`spatialdata`, `scanpy`, `anndata`, `squidpy`, …) and `elembio-cli`
-**preinstalled**. It acts as the calling user, so `elembio-cli` works inside it with no extra
-credentials. A locally installed `elembio` CLI, when present, handles lightweight data access
-with no spin-up. Check for it first — `which elembio && elembio whoami` — then route:
+**preinstalled and signed in as the user**. Everything runs there, listing runs included: run
+every `elembio …` command through `execute_command`, and use the IDs it returns for mounting in
+the same sandbox.
 
-| Task | Use |
-| --- | --- |
-| List / resolve runs, executions, or storage; read metadata; small download | **Local `elembio` CLI** if present — fastest, no spin-up |
-| Compute — QC, normalize, cluster, DE, imaging, or any multiomics / spatial analysis | **Sandbox** — the stack is preinstalled and kernel state persists across calls |
-| No local CLI available | **Sandbox** — it ships `elembio-cli`; run `elembio …` via `execute_command` |
-| Read cloud data in place (no copy) | **Either** — `elembio … mount` works from the local CLI or inside the sandbox |
+- If the `elembio-sandbox` tools aren't available yet (server not connected, or sign-in
+  pending), tell the user to connect it and wait for them.
+- Use the multiomics `elembio-cloud-data-access` skill for command and flag reference only. Its
+  preflight and install steps are already done in the sandbox, so skip them.
+- If the user asks to work on their own machine (e.g. download a run to their laptop), follow
+  `elembio-cloud-data-access` directly.
 
-Wherever the CLI runs, `runs list` and `executions list` return **newest first**: runs by last update, executions by creation. For "recent" or "latest", bound the window with a time filter and cap the count, e.g. `elembio runs list --filter 'time_created>=7d' --max-items 10`. A relative date means "now minus that long", so `>=7d` is *within* the last 7 days; `<7d` is *older* than 7 days. If the window comes back empty, widen it (`30d`, `90d`). Don't fetch everything with `--max-items 0` and sort it yourself. Keep `--max-items 0` for filters that must return every match, such as a name lookup. For those, quote names for an exact match: `--filter 'name:"<run-name>"'`.
+`runs list` and `executions list` return **newest first**: runs by last update, executions by creation. For "recent" or "latest", bound the window with a time filter and cap the count, e.g. `elembio runs list --filter 'time_created>=7d' --max-items 10`. A relative date means "now minus that long", so `>=7d` is *within* the last 7 days; `<7d` is *older* than 7 days. If the window comes back empty, widen it (`30d`, `90d`). Don't fetch everything with `--max-items 0` and sort it yourself. Keep `--max-items 0` for filters that must return every match, such as a name lookup. For those, quote names for an exact match: `--filter 'name:"<run-name>"'`.
 
 **When multiple viable paths exist, ask the user** which to take — don't default to the most
-comprehensive one. This applies to local-vs-sandbox routing, instrument data vs. execution SDO,
-and which modalities or conditions to focus on. Skip the question only when the choice is forced
-(no local CLI, only one data source available) or a preference the user already stated.
+comprehensive one. This applies to instrument data vs. execution SDO and which modalities or
+conditions to focus on. Skip the question only when the choice is forced (only one data source
+available) or a preference the user already stated.
 
-## Quickstart (sandbox path)
+## Quickstart
 
 The end-to-end shape for "analyze my run in the sandbox" — each step's detail is in the
 companion files:
