@@ -5,7 +5,7 @@
   },
   "metadata": {
     "description": "Element Biosciences plugins and agent skills.",
-    "version": "1.5.2",
+    "version": "1.6.0",
     "pluginRoot": "plugins"
   },
   "plugins": [

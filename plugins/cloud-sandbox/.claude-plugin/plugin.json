@@ -1,7 +1,7 @@
 {
   "name": "cloud-sandbox",
   "displayName": "ElemBio Cloud Sandbox",
-  "version": "0.7.5",
+  "version": "0.8.0",
   "description": "Remote compute plus your Element Biosciences cloud data for multiomics, QC, and spatial analysis. Sign in with your ElemBio account.",
   "author": {
     "name": "Element Biosciences",
