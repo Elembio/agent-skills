@@ -2,7 +2,7 @@
 name: sandbox-environment
 description: "Use when working with Element Biosciences / AVITI / AVITI24 data — listing or resolving runs, executions, or cloud storage; downloading or mounting data; or running multiomics, single-cell, spatial, imaging, OPS, QC, or differential-expression analysis. Routes between the local `elembio` CLI (quick listing, metadata, small downloads) and the ElemBio Cloud sandbox MCP `elembio-sandbox` (for compute, or when no local CLI is available): create one sandbox and reuse it, mount cloud data in place with elembio-cli, and drive the analysis with the Element Biosciences `multiomics` skills (QC, normalization, and modality-specific pipelines) on the preinstalled stack (spatialdata / scanpy / anndata / squidpy)."
 metadata:
-  version: 0.7.4
+  version: 0.7.5
   author: elembio
 ---
 
@@ -63,7 +63,8 @@ companion files:
    execution's SDO, which modalities to focus on, full pipeline vs. QC only).
 4. **Load it** with `execute_code`:
    `from elembio_spatialdata_analysis.load import Loader; loader = Loader("<the .zarr under /runs/<run-id>>")`.
-5. **Drive the analysis** with the `multiomics` skills (start at their `index`). Reuse live
+5. **Drive the analysis** with the `multiomics` skills (start at their `index`; which copy to
+   use is under [Running the analysis](#running-the-analysis)). Reuse live
    kernel state across turns; checkpoint expensive state to `/data/session` (see
    [REFERENCE.md](REFERENCE.md)).
 6. **Return results** — write figures/tables to `$ELEMBIO_EXECUTION_OUTPUTS_DIR`, then
@@ -133,10 +134,25 @@ Analysis in the sandbox is **driven by the Element Biosciences `multiomics` skil
 improvise with generic single-cell / Scanpy defaults. Once data is mounted, load the `.zarr`
 store with `Loader`, then **start with the `multiomics` `index` skill**, which routes to the
 right specialist and platform order (it encodes AVITI24 / DISS conventions that generic
-defaults get wrong). Refer to it by name — it installs as a separate plugin, so relative file
-paths from here will not resolve. If the multiomics skills aren't available, install the
-Element Biosciences multiomics-skills plugin (or ask the user to) rather than substituting
-ad-hoc analysis. This skill deliberately does not duplicate those steps.
+defaults get wrong). This skill deliberately does not duplicate those steps.
+
+The `multiomics` skills can reach you two ways — served by this MCP server, or installed
+locally as a plugin — and the two copies can be different versions. Pick one, in this order:
+
+1. **The copy the user asked for.** "Use my installed multiomics skills", or a version they
+   named, wins for the whole task.
+2. **The server's copy**, when `create_sandbox` returned a `multiomics_index_uri` and reading
+   it succeeds. Read it with `resources/read` (or `read_skill`), and open the specialists it
+   links to the same way — a link like `../cell-quality-control/SKILL.md` becomes
+   `elembio-skill://multiomics/cell-quality-control/SKILL.md`.
+3. **The locally installed plugin**, referred to by name, when the server does not serve the
+   pack (no `multiomics_index_uri`, or reading it reports an unknown namespace). Relative file
+   paths from here will not resolve to it.
+4. **Neither available:** install the Element Biosciences multiomics-skills plugin (or ask the
+   user to) rather than substituting ad-hoc analysis.
+
+Stay in the copy you started with. Mixing a local skill for one step and the server's for
+another can combine instructions from two versions without anyone noticing.
 
 ## Outputs
 
