@@ -60,6 +60,7 @@ field, and correction — apply and re-send; they are **not** health signals, so
 | result has `exit_reason: "oom"` / `"crash"` | kernel died on this call (terminal) | surface the reason; let the user choose a new session / larger tier | user decides |
 | result has `resume_state_lost: true` | sandbox was reset (not resumed); this call ran against an **empty kernel** | stay on same id; re-run mounts, reinstall, reload `/data/session` checkpoint, re-run work; do not report a result that depended on earlier state | **no** |
 | unexpected `NameError` / empty namespace (seen via `execute_code`) | state gone, not dead | same id; re-run mounts, reload checkpoint | **no** |
+| `get_results` returns `payload_shed: true` | the run finished, but its stdout was dropped to bound memory after later runs completed. The receipt has `cause`, `error_summary`, `output_paths`, `duration_seconds` and **no `stdout` or `success` field** | report the outcome from `cause` / `error_summary` — a missing `success` is unknown, **not** success; read written files from `output_paths`; re-run only if you need the printed output | **no** |
 | result has `outputs_unavailable` | code ran but `/data/session` was unreachable, so nothing there was saved | treat outputs as lost; check `session_storage_state`; re-run once storage is healthy | **no** |
 | still `busy` after `interrupt_execution` | interrupt is best-effort | poll `get_status`; if still busy, surface to user; do **not** `destroy_sandbox` yourself | **no** |
 

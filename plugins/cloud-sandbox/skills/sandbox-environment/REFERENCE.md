@@ -24,7 +24,7 @@ Contents: [Limits at a glance](#limits-at-a-glance)
 | `install_packages` build cap | 300 s (then detaches; poll `get_results`) |
 | Inline stdout before it spills to a file | ~64 KB |
 | Concurrent kernel calls | 1 (calls queue) |
-| Idle hibernation | after ~1 h idle; auto-resumes on the next call |
+| Idle hibernation | minutes after the last call finishes (server-set); auto-resumes on the next call |
 
 ## Pre-installed stack and installing packages
 
@@ -130,13 +130,15 @@ in order of preference:
 
 ### Idle hibernation and resume
 
-An idle sandbox is **hibernated** after roughly an hour: its memory image (variables, imports,
-loaded data) is snapshotted and its compute is released. The next tool call **auto-resumes** it
-— nothing special to call; the call just takes longer while the image is restored (it may return
-a provisioning response with `phase: "restoring"` — see [RECOVERY.md](RECOVERY.md)).
-`/data/session` persists throughout, and a detached run survives the idle window whether or not
-you poll. State is lost only if the restore **fails**, which surfaces as `resume_state_lost` —
-the one case where you reload your checkpoint and re-run mounts. This is why checkpointing
+An idle sandbox is **hibernated** a few minutes after its last call finishes — the window is set
+server-side, so expect it between turns whenever the user pauses rather than planning around a
+number. Its memory image (variables, imports, loaded data) is snapshotted and its compute is
+released. The next tool call **auto-resumes** it — nothing special to call; the call just takes
+longer while the image is restored (it may return a provisioning response with
+`phase: "restoring"` — see [RECOVERY.md](RECOVERY.md)). `/data/session` persists throughout, and
+a running kernel is never idle, so a detached run keeps going whether or not you poll. State is
+lost only if the restore **fails**, which surfaces as `resume_state_lost` — the one case where
+you reload your checkpoint and re-run mounts. This is why checkpointing
 expensive state (below) turns any reset into a one-line reload.
 
 ### Checkpointing
@@ -205,13 +207,15 @@ Two consequences worth internalizing:
   running server-side. Branch on the result you got back:
   - A normal completed result (stdout + success/failure metadata) → treat as final.
   - **Detached metadata** `{status: "running", run_id, sandbox_id, poll_with: "get_results"}` →
-    expected for a long run, not an error. The run survives past the idle window whether or not
-    you poll. Then:
+    expected for a long run, not an error. A running kernel is never hibernated, so the run
+    keeps going whether or not you poll. Then:
     - **Tell the user it detached before you poll.** One line naming the work and that it is
       running server-side. A detach is the single most disorienting thing the user cannot see:
       from their side a silent poll loop and a hung session look identical.
     - **Poll `get_results(sandbox_id, run_id)`** — returns `{status: "running"}` while in flight,
-      then the same stdout/success/artifacts shape a short run returns. Space polls seconds
+      then the same stdout/success/artifacts shape a short run returns. A run left uncollected
+      while many later runs finish can instead come back as a `payload_shed: true` receipt with
+      no `success` field (see [RECOVERY.md](RECOVERY.md)). Space polls seconds
       apart; **retrieval is multi-turn** — submit in one turn, fetch in a later one if needed.
       **Do not narrate each poll** — one line at detach, one line when it lands. If the wait
       passes a couple of minutes, or you check `resource_usage` and something looks wrong
