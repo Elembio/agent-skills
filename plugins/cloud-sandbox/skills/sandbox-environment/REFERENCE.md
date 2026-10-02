@@ -202,7 +202,8 @@ Two consequences worth internalizing:
 
 - **`execute_code` / `execute_command`** take an optional `timeout_seconds` (default **120**,
   max **7200**). This is the task's max wall-clock, not a transport limit. Each
-  `execute_code` or `execute_command` call is a **task**.
+  call that runs on the kernel — `execute_code`, `execute_command`, `install_packages`
+  or `list_files` — is a **task**.
 - **One call runs at a time.** Batch independent steps into one cell.
 - **Inline wait is ~45 s.** A task that outlasts it does not fail — it **detaches** and keeps
   running server-side. Branch on the result you got back:
