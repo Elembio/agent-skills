@@ -21,7 +21,7 @@ you reach the situation they cover, not before:
 - **[REFERENCE.md](REFERENCE.md)** — how to work efficiently in the sandbox: the preinstalled
   stack and installing packages, filesystem and the writable budget, where outputs go and how to
   confirm they are durable, reusing kernel state across turns, checkpointing, long-running
-  detached runs, and what to say to the user while one is in flight.
+  detached tasks, and what to say to the user while one is in flight.
 - **[RECOVERY.md](RECOVERY.md)** — what to do when a call times out, errors, or returns an
   unexpected shape. The single most important rule lives there: a timeout is **not** a dead
   sandbox, and needlessly recreating one throws away loaded data.
@@ -106,7 +106,7 @@ step feels internal:
 | Case | Say this |
 |---|---|
 | **Anything that will take a while** — a first `load_tables` over FUSE, a full pass over `X`, a big install (*not* a mount; that is ~1 s) | What you are about to do and roughly why it is slow, *before* you call it. Then the outcome. |
-| **A detached run** (`status: "running"`) | That it detached and what it is working on — *before* the first `get_results`. Never poll in silence; see [REFERENCE.md](REFERENCE.md). |
+| **A detached task** (`status: "running"`) | That it detached and what it is working on — *before* the first `get_results`. Never poll in silence; see [REFERENCE.md](REFERENCE.md). |
 | **A discovery result that changes the plan** | Say it when you learn it, not in the final summary. "This run has no execution, so the store ships inside the run itself" is a course correction the user should see happen. |
 | **A running or recently completed execution exists** | Surface it and ask whether to wait for its SDO or proceed with instrument data — this changes the analysis path, not just the timeline. |
 
