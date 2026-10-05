@@ -2,7 +2,7 @@
 name: sandbox-environment
 description: "Use when working with Element Biosciences / AVITI / AVITI24 data through the ElemBio Cloud sandbox MCP (`elembio-sandbox`) — listing or resolving runs, executions, or cloud storage; mounting data; or running multiomics, single-cell, spatial, imaging, OPS, QC, or differential-expression analysis. Everything runs inside the sandbox: create one and reuse it, run `elembio …` there via `execute_command` (preinstalled and signed in as the user), mount cloud data in place, and drive the analysis with the Element Biosciences `multiomics` skills (QC, normalization, and modality-specific pipelines) on the preinstalled stack (spatialdata / scanpy / anndata / squidpy)."
 metadata:
-  version: 0.8.1
+  version: 0.8.2
   author: elembio
 ---
 
@@ -162,3 +162,8 @@ another can combine instructions from two versions without anyone noticing.
   inline image — to the user with **`fetch_artifact`**.
 - The handling rules (the full `s3_status` values, and when `fetch_artifact` omits an image's
   bytes) are in **[REFERENCE.md](REFERENCE.md)**.
+
+## Disclaimer
+
+This content is provided "as-is" without warranty of any kind. AI-generated output may contain
+inaccuracies. Review and verify all outputs before relying on them.
