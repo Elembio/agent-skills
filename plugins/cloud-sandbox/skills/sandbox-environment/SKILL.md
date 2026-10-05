@@ -156,8 +156,9 @@ another can combine instructions from two versions without anyone noticing.
 
 ## Outputs
 
-- Write durable outputs to **`$ELEMBIO_EXECUTION_OUTPUTS_DIR`** (a fresh per-call directory);
-  exactly those files come back as `artifacts`. Use `/tmp` for scratch.
+- Write durable outputs to **`$ELEMBIO_EXECUTION_OUTPUTS_DIR`**, the sandbox's outputs
+  directory. Each task returns the files it wrote there as `artifacts`. You choose the names,
+  and a write to an existing name replaces that file. Use `/tmp` for scratch.
 - Confirm a file landed with its artifact **`s3_status: present`**; surface a file — or an
   inline image — to the user with **`fetch_artifact`**.
 - The handling rules (the full `s3_status` values, and when `fetch_artifact` omits an image's
