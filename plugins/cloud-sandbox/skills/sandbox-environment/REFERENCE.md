@@ -67,9 +67,6 @@ There is a **single writable volume, ~900 MB usable**, shared by `/`, `/tmp`, an
 
 Rules that follow from per-call attribution:
 
-- **Revise by writing a new file, never by overwriting a prior path.** Each past chat message
-  keeps rendering the file it referenced, so overwriting rewrites history. A revised plot is a
-  new file in the current call's output dir.
 - **Read a prior call's output by the absolute path that call returned** — it stays valid.
 - **Only `fetch_artifact` a path you received in a call's `artifacts`.** A failed
   `execute_code` writes no artifact, so a path "from" a failed call points at nothing.

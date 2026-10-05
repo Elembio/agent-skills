@@ -160,5 +160,5 @@ another can combine instructions from two versions without anyone noticing.
   exactly those files come back as `artifacts`. Use `/tmp` for scratch.
 - Confirm a file landed with its artifact **`s3_status: present`**; surface a file — or an
   inline image — to the user with **`fetch_artifact`**.
-- The handling rules (revise-by-new-file, the full `s3_status` values, and when `fetch_artifact`
-  omits an image's bytes) are in **[REFERENCE.md](REFERENCE.md)**.
+- The handling rules (the full `s3_status` values, and when `fetch_artifact` omits an image's
+  bytes) are in **[REFERENCE.md](REFERENCE.md)**.
