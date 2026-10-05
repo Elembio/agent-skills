@@ -20,7 +20,7 @@ Contents: [Limits at a glance](#limits-at-a-glance)
 | Output handed back off the sandbox | ≤ ~1 GB (downsample / summarize above) |
 | `request_upload` inbound file | ≤ 5 GiB (mount larger sources) |
 | `execute_code` / `execute_command` `timeout_seconds` | default 120 s · max 7200 s |
-| Inline wait before a run detaches | ~45 s |
+| Inline wait before a task detaches | ~45 s |
 | `install_packages` build cap | 300 s (then detaches; poll `get_results`) |
 | Inline stdout before it spills to a file | ~64 KB |
 | Concurrent kernel calls | 1 (calls queue) |
@@ -67,9 +67,6 @@ There is a **single writable volume, ~900 MB usable**, shared by `/`, `/tmp`, an
 
 Rules that follow from per-call attribution:
 
-- **Revise by writing a new file, never by overwriting a prior path.** Each past chat message
-  keeps rendering the file it referenced, so overwriting rewrites history. A revised plot is a
-  new file in the current call's output dir.
 - **Read a prior call's output by the absolute path that call returned** — it stays valid.
 - **Only `fetch_artifact` a path you received in a call's `artifacts`.** A failed
   `execute_code` writes no artifact, so a path "from" a failed call points at nothing.
@@ -136,7 +133,7 @@ number. Its memory image (variables, imports, loaded data) is snapshotted and it
 released. The next tool call **auto-resumes** it — nothing special to call; the call just takes
 longer while the image is restored (it may return a provisioning response with
 `phase: "restoring"` — see [RECOVERY.md](RECOVERY.md)). `/data/session` persists throughout, and
-a running kernel is never idle, so a detached run keeps going whether or not you poll. State is
+a running kernel is never idle, so a detached task keeps going whether or not you poll. State is
 lost only if the restore **fails**, which surfaces as `resume_state_lost` — the one case where
 you reload your checkpoint and re-run mounts. This is why checkpointing
 expensive state (below) turns any reset into a one-line reload.
@@ -201,37 +198,39 @@ Two consequences worth internalizing:
   number that already exists in `obsm` turns a 3-second call into a full-store scan.
 
 - **`execute_code` / `execute_command`** take an optional `timeout_seconds` (default **120**,
-  max **7200**). This is the run's max wall-clock, not a transport limit.
+  max **7200**). This is the task's max wall-clock, not a transport limit. Each
+  call that runs on the kernel — `execute_code`, `execute_command`, `install_packages`
+  or `list_files` — is a **task**.
 - **One call runs at a time.** Batch independent steps into one cell.
-- **Inline wait is ~45 s.** A run that outlasts it does not fail — it **detaches** and keeps
+- **Inline wait is ~45 s.** A task that outlasts it does not fail — it **detaches** and keeps
   running server-side. Branch on the result you got back:
   - A normal completed result (stdout + success/failure metadata) → treat as final.
-  - **Detached metadata** `{status: "running", run_id, sandbox_id, poll_with: "get_results"}` →
-    expected for a long run, not an error. A running kernel is never hibernated, so the run
+  - **Detached metadata** `{status: "running", task_id, sandbox_id, poll_with: "get_results"}` →
+    expected for a long task, not an error. A running kernel is never hibernated, so the task
     keeps going whether or not you poll. Then:
     - **Tell the user it detached before you poll.** One line naming the work and that it is
       running server-side. A detach is the single most disorienting thing the user cannot see:
       from their side a silent poll loop and a hung session look identical.
-    - **Poll `get_results(sandbox_id, run_id)`** — returns `{status: "running"}` while in flight,
-      then the same stdout/success/artifacts shape a short run returns. A run left uncollected
-      while many later runs finish can instead come back as a `payload_shed: true` receipt with
+    - **Poll `get_results(sandbox_id, task_id)`** — returns `{status: "running"}` while in flight,
+      then the same stdout/success/artifacts shape a short task returns. A task left uncollected
+      while many later tasks finish can instead come back as a `payload_shed: true` receipt with
       no `success` field (see [RECOVERY.md](RECOVERY.md)). Space polls seconds
       apart; **retrieval is multi-turn** — submit in one turn, fetch in a later one if needed.
       **Do not narrate each poll** — one line at detach, one line when it lands. If the wait
       passes a couple of minutes, or you check `resource_usage` and something looks wrong
-      (memory climbing toward the limit, a run far past its expected duration), say so then
+      (memory climbing toward the limit, a task far past its expected duration), say so then
       rather than at the end.
     - **Lead with the result when it lands.** The user has been waiting on this one — give them
       the headline number before you move on to the next call.
     - **A long wait is useful time, not dead time.** Read the skill you will need next, or
-      check the docs for the step after this one, while the run is in flight — but say that is
+      check the docs for the step after this one, while the task is in flight — but say that is
       what you are doing, so the interleaved tool calls are legible.
-    - **Recover a lost `run_id`** from `get_status.kernel_status.active_run_id` while the sandbox
-      is still `busy` (it is absent when idle). `get_status.last_run` is the historical handle if
+    - **Recover a lost `task_id`** from `get_status.kernel_status.active_task_id` while the sandbox
+      is still `busy` (it is absent when idle). `get_status.last_task` is the historical handle if
       you lost it entirely.
     - Use `get_status` alongside for resource progress (`resource_usage`, `busy`) — never for
       namespace contents.
-- **`interrupt_execution(sandbox_id)`** stops the in-flight run and **keeps the kernel alive**
+- **`interrupt_task(sandbox_id)`** stops the in-flight task and **keeps the kernel alive**
   (variables, imports, packages, mounts survive); `get_results` then returns the interrupted
   state (`success: false`). It is best-effort and Python-level: code stuck in a C extension
   (BLAS, native calls) or uninterruptible I/O yields only when it returns.
