@@ -53,23 +53,27 @@ additions.
 There is a **single writable volume, ~900 MB usable**, shared by `/`, `/tmp`, and
 `/data/session`. This is the constraint most failures trace back to.
 
-- **`$ELEMBIO_EXECUTION_OUTPUTS_DIR`** — a fresh per-call directory the kernel sets before each
-  `execute_code`. Exactly the files you write there are returned as that call's `artifacts`
-  (each with a `path`, `s3_uri`, `s3_status`, `size_bytes`). Write anything you want returned or
-  kept beyond the call here, e.g.
+- **`$ELEMBIO_EXECUTION_OUTPUTS_DIR`** — the sandbox's outputs directory,
+  `/data/session/outputs/`. Every task uses the same directory. Each `execute_code` or
+  `execute_command` result lists the files that task wrote there as its `artifacts` (each with a
+  `path`, `s3_uri`, `s3_status`, `size_bytes`). Write anything you want returned or kept beyond
+  the task here, e.g.
   `os.path.join(os.environ["ELEMBIO_EXECUTION_OUTPUTS_DIR"], "plot.png")`.
 - **`/data/session`** — writable and durable: it survives kernel restart, idle-reap/resume, and
-  a fresh-provision reset. Use it for **checkpoints** (a stable path you control), not for
-  per-call outputs.
+  a fresh-provision reset. Use it for **checkpoints** (a stable path you control) outside the
+  outputs directory.
 - **`/tmp`, `/app`, other worker-local paths** — scratch only, not guaranteed to survive.
 - **`/runs/<id>`, `/executions/<id>`, `/storage/<id>`** — conventional mount points (not
   pre-mounted; mount on demand — see below).
 
-Rules that follow from per-call attribution:
+Rules that follow from one shared directory:
 
-- **Read a prior call's output by the absolute path that call returned** — it stays valid.
-- **Only `fetch_artifact` a path you received in a call's `artifacts`.** A failed
-  `execute_code` writes no artifact, so a path "from" a failed call points at nothing.
+- **You choose the file names.** A write to an existing name replaces that file. The earlier
+  contents are not kept, so use a new name when you need both versions.
+- **Read a prior task's output by the absolute path that task returned.** The path stays valid
+  until a later task writes the same name.
+- **Only `fetch_artifact` a path you received in a task's `artifacts`.** A failed task reports
+  no artifacts. Files it wrote before it failed can exist, but nothing confirms them.
 
 Confirming durability and handing files back:
 
@@ -149,7 +153,8 @@ adata.write_h5ad("/data/session/checkpoint/adata.h5ad")   # a fixed path you con
 
 `/data/session` survives kernel restart, idle-reap/resume, and a fresh-provision reset, so any
 state loss becomes a one-line reload instead of rerunning the pipeline. Do **not** checkpoint
-into the per-call `$ELEMBIO_EXECUTION_OUTPUTS_DIR`.
+into `$ELEMBIO_EXECUTION_OUTPUTS_DIR`: each rewrite would come back as an artifact, mixed
+with the deliverables.
 
 **Reloading a large checkpoint is a cold S3 read — budget for it.** After a reset the file is no
 longer in the mount cache, so it streams from S3 (~60–100 MB/s; a just-written file reads ~10×
