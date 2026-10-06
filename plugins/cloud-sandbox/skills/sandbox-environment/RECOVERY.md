@@ -79,8 +79,8 @@ Call `get_status` and read only the liveness fields:
 - **`status: "provisioning"` or `"resuming"` with no `kernel_status`** → not booted yet; an absent
   `kernel_status` is **not** `alive: false`. Wait `retry_after_seconds` and poll.
 - **`status: "hibernated"`** → idle-hibernated, **not dead**: variables, imports, and loaded data
-  are intact. The reply carries only `sandbox_id`, `status`, and `region` — the missing
-  `kernel_status` and `resource_usage` are not a fault. Call `execute_code` / `execute_command` on
+  are intact. The reply carries only `sandbox_id`, `status`, `region`, and (when known)
+  `last_activity_at` — the missing `kernel_status` and `resource_usage` are not a fault. Call `execute_code` / `execute_command` on
   the same `sandbox_id`; it resumes automatically. Never `create_sandbox` for it.
 - **`status: "kernel_lost"`, `status: "destroying"`, `kernel_status.alive: false`** (or a
   dead-socket reply: `read response: EOF`, `the client session is not running`) → a verdict came
