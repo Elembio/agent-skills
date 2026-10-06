@@ -29,8 +29,9 @@ A `status: "provisioning"` or `"resuming"` response (from `create_sandbox` **or*
 is a success, not an error. The `sandbox_id` is valid and reserved.
 
 - **Poll `get_status`** with that id, waiting `retry_after_seconds` between polls, until
-  `status` is `"ready"`. Do **not** call `create_sandbox` again — a second call starts a
-  second sandbox (and can start a second host).
+  `status` is `"ready"`. Do **not** call `create_sandbox` — while `provisioning`, a second call
+  starts a second sandbox (and can start a second host); while `resuming`, a new sandbox starts
+  empty, without the state being restored.
 - **Honor the stopping rule in the payload.** `max_wait_seconds` + `on_timeout` say how long to
   wait and what to do after; count from your *first* poll of that id, not `elapsed_seconds`
   (which restarts on each attempt). When `poll_budget_exhausted: true` (or you pass
@@ -80,9 +81,10 @@ Call `get_status` and read only the liveness fields:
   `kernel_status` is **not** `alive: false`. Wait `retry_after_seconds` and poll.
 - **`status: "hibernated"`** → idle-hibernated, **not dead**: variables, imports, and loaded data
   are intact. The reply carries only `sandbox_id`, `status`, `region`, and (when known)
-  `last_activity_at` — the missing `kernel_status` and `resource_usage` are not a fault. Call `execute_code` / `execute_command` on
-  the same `sandbox_id`; it resumes automatically. Never `create_sandbox` for it.
-- **`status: "kernel_lost"`, `status: "destroying"`, `kernel_status.alive: false`** (or a
+  `last_activity_at` — the missing `kernel_status` and `resource_usage` are not a fault. Call
+  `execute_code` / `execute_command` on the same `sandbox_id`; it resumes automatically. Never
+  `create_sandbox` for it.
+- **`status: "kernel_lost"`, `"destroying"` or `"destroyed"`, `kernel_status.alive: false`** (or a
   dead-socket reply: `read response: EOF`, `the client session is not running`) → a verdict came
   back: the kernel cannot work. Now `create_sandbox`, then re-run mounts.
 - **`get_status` itself fails to connect** (`dial guest … after N attempt(s)`, `i/o timeout`,
