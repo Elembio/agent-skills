@@ -12,36 +12,38 @@ Contents: [The one rule](#the-one-rule) · [Provisioning and restore](#provision
 **A timeout or connection-shaped error does not by itself mean the kernel died.** `create_sandbox`
 permanently discards in-memory state (loaded data, variables, installed packages); `/data/session`
 files survive but everything else does not. Read the signal first, then act. Waiting out an
-ambiguous error costs a minute; a needless recreate can throw away a long analysis.
+ambiguous error costs a minute; a needless recreate can throw away a long analysis. Nor does
+`status: "hibernated"` — that sandbox is idle with its state intact, and the next call on the same
+`sandbox_id` resumes it.
 
 Two probes, and they answer different questions:
 
-- **`get_status`** — liveness, resources (`resource_usage`), `busy`, and mount/kernel verdicts.
+- **`get_status`** — liveness (`status`), resources (`resource_usage`), and mount/kernel verdicts.
   It does **not** describe the Python namespace.
 - **`execute_code`** (`dir()`, `'loader' in globals()`) — the only way to check what survived in
   the namespace.
 
 ## Provisioning and restore (before the sandbox is usable)
 
-A `status: "INSTANCE_PROVISIONING"` response (from `create_sandbox` **or** `get_status`) is a
-success, not an error. The `sandbox_id` is valid and reserved.
+A `status: "provisioning"` or `"resuming"` response (from `create_sandbox` **or** `get_status`)
+is a success, not an error. The `sandbox_id` is valid and reserved.
 
 - **Poll `get_status`** with that id, waiting `retry_after_seconds` between polls, until
-  `status` is `"INSTANCE_READY"`. Do **not** call `create_sandbox` again — a second call starts a
+  `status` is `"ready"`. Do **not** call `create_sandbox` again — a second call starts a
   second sandbox (and can start a second host).
 - **Honor the stopping rule in the payload.** `max_wait_seconds` + `on_timeout` say how long to
   wait and what to do after; count from your *first* poll of that id, not `elapsed_seconds`
   (which restarts on each attempt). When `poll_budget_exhausted: true` (or you pass
   `max_wait_seconds`), stop, tell the user, and do `on_timeout` (`create_sandbox`) — the one
   case where a second create is correct.
-- **`phase: "restoring"`** means the session's memory image is being pulled back — variables and
+- **`status: "resuming"`** means the session's memory image is being pulled back — variables and
   loaded data return with it, so waiting almost always beats starting over. `bytes_total` sizes
   the wait (tens of GiB = minutes). There is deliberately no ETA and no `poll_budget_exhausted`
   here; `max_wait_seconds` is the stop. Tell the user what is being restored if it passes a
   minute ("restoring 46 GiB of session state").
 - **`at capacity`** → the fleet is full; tell the user rather than retrying in a loop.
-- A session-scoped tool answering with this provisioning shape plus `retry_with` means the
-  sandbox was hibernated and is being restored — same rules, then retry the named tool.
+- A session-scoped tool answering with this shape means the sandbox was hibernated and is being
+  restored — same rules, then retry the same call on the same `sandbox_id`.
 
 ## Error / signal → action
 
@@ -62,7 +64,7 @@ field, and correction — apply and re-send; they are **not** health signals, so
 | unexpected `NameError` / empty namespace (seen via `execute_code`) | state gone, not dead | same id; re-run mounts, reload checkpoint | **no** |
 | `get_results` returns `payload_shed: true` | the task finished, but its stdout was dropped to bound memory after later tasks completed. The receipt has `cause`, `error_summary`, `output_paths`, `duration_seconds` and **no `stdout` or `success` field** | report the outcome from `cause` / `error_summary` — a missing `success` is unknown, **not** success; read written files from `output_paths`; re-run only if you need the printed output | **no** |
 | result has `outputs_unavailable` | code ran but `/data/session` was unreachable, so nothing there was saved | treat outputs as lost; check `session_storage_state`; re-run once storage is healthy | **no** |
-| still `busy` after `interrupt_task` | interrupt is best-effort | poll `get_status`; if still busy, surface to user; do **not** `destroy_sandbox` yourself | **no** |
+| `status` still `"busy"` after `interrupt_task` | interrupt is best-effort | poll `get_status`; if still busy, surface to user; do **not** `destroy_sandbox` yourself | **no** |
 
 `resume_state_lost` appears **at most once** — on the call whose own resume did the reset — so
 act on it immediately rather than waiting for confirmation on the next call.
@@ -71,20 +73,24 @@ act on it immediately rather than waiting for confirmation on the next call.
 
 Call `get_status` and read only the liveness fields:
 
-- **`kernel_status.alive: true`** (even at high `resource_usage.memory_percent` or `busy: true`)
+- **`kernel_status.alive: true`** (even at high `resource_usage.memory_percent` or `status: "busy"`)
   → do **not** recreate. High `%` is a resident-RAM clue, not a death warrant. Recover in place:
   free unused objects, split the work into smaller cells, or raise `timeout_seconds`.
-- **`status: "INSTANCE_PROVISIONING"` with no `kernel_status`** → not booted yet; an absent
+- **`status: "provisioning"` or `"resuming"` with no `kernel_status`** → not booted yet; an absent
   `kernel_status` is **not** `alive: false`. Wait `retry_after_seconds` and poll.
-- **`kernel_status.alive: false`** (or a dead-socket reply: `read response: EOF`, `the client
-  session is not running`) → a verdict came back: the kernel cannot work. Now `create_sandbox`,
-  then re-run mounts.
+- **`status: "hibernated"`** → idle-hibernated, **not dead**: variables, imports, and loaded data
+  are intact. The reply carries only `sandbox_id`, `status`, and `region` — the missing
+  `kernel_status` and `resource_usage` are not a fault. Call `execute_code` / `execute_command` on
+  the same `sandbox_id`; it resumes automatically. Never `create_sandbox` for it.
+- **`status: "kernel_lost"`, `status: "destroying"`, `kernel_status.alive: false`** (or a
+  dead-socket reply: `read response: EOF`, `the client session is not running`) → a verdict came
+  back: the kernel cannot work. Now `create_sandbox`, then re-run mounts.
 - **`get_status` itself fails to connect** (`dial guest … after N attempt(s)`, `i/o timeout`,
   `no route to host`) → **no verdict**, only a broken path to a possibly-healthy sandbox. This is
   the one place recreate is the expensive guess. Poll again after ~10 s and keep polling for
   about a minute before concluding it is gone.
-- **`lifecycle_phase: "snapshotting"`** → the platform is hibernating or migrating the sandbox;
-  every other field reads healthy and it will come back. Wait and poll; do not replace it.
+- **`status: "snapshotting"`** → the sandbox is refusing new work while it hibernates, moves
+  host, or warms up right after a resume; it will come back. Wait and poll; do not replace it.
 
 ### Non-OK `socket_state`
 
