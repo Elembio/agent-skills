@@ -55,19 +55,20 @@ field, and correction — apply and re-send; they are **not** health signals, so
 | Signal | What it means | Action | Recreate? |
 |---|---|---|---|
 | `sandbox_id is required` | dropped parameter, usually | re-send with the id you hold | only if the id is genuinely lost |
-| `session X not found` | session expired | `create_sandbox`, retry | yes |
+| `sandbox X not found` with a `reason` | the sandbox is gone, and `reason` says why: `destroy_requested`, `resume_window_expired`, `resume_attempts_exhausted`, `snapshot_incompatible`, `snapshot_missing`, `restore_failed`, `hibernate_failed`, `host_lost`, `kernel_out_of_memory`, `kernel_crashed`, `provision_failed` | tell the user why; `create_sandbox` only if more work is needed (after `destroy_requested`, only if the user wants it). A new sandbox has an empty kernel **and its own empty `/data/session`**: files the old one wrote are not there | yes |
+| `sandbox X not found` with no `reason` | gone, cause not recorded | `create_sandbox`, retry | yes |
 | `not authorized for session` | API-key / ownership mismatch | `create_sandbox` | yes |
 | `registry lookup failed` | registry didn't answer; no verdict | keep the id, retry in ~10 s | **no** |
 | `create_sandbox failed` | provisioning error | wait 15 s, retry once, then surface | (retry once) |
 | result has `typed_busy_since_unix_nanos` | your call queued behind another run; never entered the kernel | wait briefly, retry; send fewer back-to-back calls | **no** |
-| result has `exit_reason: "oom"` / `"crash"` | kernel died on this call (terminal) | surface the reason; let the user choose a new session / larger tier | user decides |
-| result has `resume_state_lost: true` | sandbox was reset (not resumed); this call ran against an **empty kernel** | stay on same id; re-run mounts, reinstall, reload `/data/session` checkpoint, re-run work; do not report a result that depended on earlier state | **no** |
+| result has `reason: "kernel_out_of_memory"` / `"kernel_crashed"` | kernel died on this call (terminal) | surface the reason. A new sandbox has the same memory, so after an out-of-memory load less, work in chunks, `del` what you no longer need | user decides |
+| result has `state_lost: {reason, detail}` | sandbox was reset (not resumed); this call ran against an **empty kernel**. `reason` says why the snapshot could not be restored (e.g. `snapshot_incompatible`, `snapshot_missing`, `restore_failed`) | stay on same id; re-run mounts, reinstall, reload `/data/session` checkpoint, re-run work; do not report a result that depended on earlier state | **no** |
 | unexpected `NameError` / empty namespace (seen via `execute_code`) | state gone, not dead | same id; re-run mounts, reload checkpoint | **no** |
 | `get_results` returns `payload_shed: true` | the task finished, but its stdout was dropped to bound memory after later tasks completed. The receipt has `cause`, `error_summary`, `output_paths`, `duration_seconds` and **no `stdout` or `success` field** | report the outcome from `cause` / `error_summary` — a missing `success` is unknown, **not** success; read written files from `output_paths`; re-run only if you need the printed output | **no** |
 | result has `outputs_unavailable` | code ran but `/data/session` was unreachable, so nothing there was saved | treat outputs as lost; check `session_storage_state`; re-run once storage is healthy | **no** |
 | `status` still `"busy"` after `interrupt_task` | interrupt is best-effort | poll `get_status`; if still busy, surface to user; do **not** `destroy_sandbox` yourself | **no** |
 
-`resume_state_lost` appears **at most once** — on the call whose own resume did the reset — so
+`state_lost` appears **at most once** — on the call whose own resume did the reset — so
 act on it immediately rather than waiting for confirmation on the next call.
 
 ## Ambiguous timeout / connection error

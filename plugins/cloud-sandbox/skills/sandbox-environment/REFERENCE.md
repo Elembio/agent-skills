@@ -42,7 +42,7 @@ analysis and CLI packages. **Don't assume an exact manifest — check before ins
 - A long install detaches at the inline wait like any run (poll `get_results`); the install
   itself is capped at 300 s.
 - Installs are **session state**: they persist across turns like variables and imports, and are
-  **lost on a kernel reset or a new sandbox** — reinstall after `resume_state_lost` or an empty
+  **lost on a kernel reset or a new sandbox** — reinstall after `state_lost` or an empty
   namespace (see [RECOVERY.md](RECOVERY.md)).
 
 Prefer the preinstalled stack and the libraries the `multiomics` skills recommend over ad-hoc
@@ -136,7 +136,7 @@ dead one, so never replace it. The next `execute_code` / `execute_command` on th
 image is restored (it may return `status: "resuming"` — see [RECOVERY.md](RECOVERY.md)).
 `/data/session` persists throughout, and a running kernel is never idle, so a detached task keeps
 going whether or not you poll. State is lost only if the restore **fails**, which surfaces as
-`resume_state_lost` — the one case where you reload your checkpoint and re-run mounts. This is
+`state_lost` (its `reason` says why) — the one case where you reload your checkpoint and re-run mounts. This is
 why checkpointing expensive state (below) turns any reset into a one-line reload.
 
 ### Checkpointing
