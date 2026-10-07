@@ -2,7 +2,7 @@
 name: sandbox-environment
 description: "Use when working with Element Biosciences / AVITI / AVITI24 data through the ElemBio Cloud sandbox MCP (`elembio-sandbox`) — listing or resolving runs, executions, or cloud storage; mounting data; or running multiomics, single-cell, spatial, imaging, OPS, QC, or differential-expression analysis. Everything runs inside the sandbox: create one and reuse it, run `elembio …` there via `execute_command` (preinstalled and signed in as the user), mount cloud data in place, and drive the analysis with the Element Biosciences `multiomics` skills (QC, normalization, and modality-specific pipelines) on the preinstalled stack (spatialdata / scanpy / anndata / squidpy)."
 metadata:
-  version: 0.8.2
+  version: 0.9.0
   author: elembio
 ---
 
@@ -54,7 +54,7 @@ The end-to-end shape for "analyze my run in the sandbox" — each step's detail 
 companion files:
 
 1. **`create_sandbox`** → keep the returned `sandbox_id` and reuse it on every call. If it comes
-   back `INSTANCE_PROVISIONING`, poll `get_status` until `INSTANCE_READY`.
+   back `status: "provisioning"`, poll `get_status` until `status: "ready"`.
 2. **Mount the data** with `execute_command` (see [MOUNTING.md](MOUNTING.md)), e.g.
    `elembio runs mount <run-id> /runs/<run-id> --disk-cache-size 0`.
 3. **Present what you found and confirm the approach.** Summarize the run structure (wells,
@@ -76,18 +76,23 @@ companion files:
   only way in, as there is no tool that lists or adopts an existing sandbox. Then reuse the
   returned id on every subsequent call: the kernel keeps variables, imports, and installed
   packages between calls, so never create a second sandbox for the same task.
-- **A `status: "INSTANCE_PROVISIONING"` response is success, not an error.** The `sandbox_id`
+- **A `status: "provisioning"` response is success, not an error.** The `sandbox_id`
   is valid and reserved for you; compute is starting (usually seconds; a cold host boot can
   reach ~2–3 minutes). Wait `retry_after_seconds`, then poll `get_status` with that id until
-  `status` is `"INSTANCE_READY"`. Do **not** call `create_sandbox` again — a second call starts
+  `status` is `"ready"`. Do **not** call `create_sandbox` again — a second call starts
   a second sandbox. The response carries its own stopping rule (`max_wait_seconds`, `on_timeout`); honor
   it. See [RECOVERY.md](RECOVERY.md) for the full provisioning / restore handling.
 - **`execute_code`** runs Python in the persistent kernel; **`execute_command`** runs bash
   (use it for all `elembio …` invocations). **One call runs at a time** — batch independent
   steps into a single cell rather than issuing many small calls back-to-back.
 - To reuse a sandbox whose id you still hold, probe `get_status` first (a liveness/resource
-  probe, **not** a namespace check). A hibernated sandbox auto-resumes on the next call; one
-  that reports dead or is not found means `create_sandbox`.
+  probe, **not** a namespace check) and branch on its one `status` field. **`hibernated` is not
+  dead:** its variables, imports, and loaded data are intact, and your next `execute_code` /
+  `execute_command` on the same `sandbox_id` resumes it automatically. `provisioning`,
+  `resuming`, `snapshotting`, `ready`, and `busy` are likewise the same sandbox — keep the id.
+  Only not found, `kernel_lost` or `destroying` means `create_sandbox`; a not-found or
+  `kernel_lost` carries a `reason` saying why — tell the user. `kernel_status.alive: false` on a
+  `ready`/`busy` sandbox is a stuck kernel: `interrupt_task` and poll first (see RECOVERY.md).
 - Only `destroy_sandbox` when the user explicitly asks to end the session.
 - **Subagents get their own sandbox.** Never hand your `sandbox_id` to a subagent (it has no
   credentials for your session and a separate `/data/session`); pass mount metadata in the

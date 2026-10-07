@@ -42,7 +42,7 @@ analysis and CLI packages. **Don't assume an exact manifest — check before ins
 - A long install detaches at the inline wait like any run (poll `get_results`); the install
   itself is capped at 300 s.
 - Installs are **session state**: they persist across turns like variables and imports, and are
-  **lost on a kernel reset or a new sandbox** — reinstall after `resume_state_lost` or an empty
+  **lost on a kernel reset or a new sandbox** — reinstall after `state_lost` or an empty
   namespace (see [RECOVERY.md](RECOVERY.md)).
 
 Prefer the preinstalled stack and the libraries the `multiomics` skills recommend over ad-hoc
@@ -130,13 +130,14 @@ in order of preference:
 An idle sandbox is **hibernated** a few minutes after its last call finishes — the window is set
 server-side, so expect it between turns whenever the user pauses rather than planning around a
 number. Its memory image (variables, imports, loaded data) is snapshotted and its compute is
-released. The next tool call **auto-resumes** it — nothing special to call; the call just takes
-longer while the image is restored (it may return a provisioning response with
-`phase: "restoring"` — see [RECOVERY.md](RECOVERY.md)). `/data/session` persists throughout, and
-a running kernel is never idle, so a detached task keeps going whether or not you poll. State is
-lost only if the restore **fails**, which surfaces as `resume_state_lost` — the one case where
-you reload your checkpoint and re-run mounts. This is why checkpointing
-expensive state (below) turns any reset into a one-line reload.
+released, and `get_status` then reads `status: "hibernated"` — a resumable sandbox, **not** a
+dead one, so never replace it. The next `execute_code` / `execute_command` on the same
+`sandbox_id` **auto-resumes** it — nothing special to call; the call just takes longer while the
+image is restored (it may return `status: "resuming"` — see [RECOVERY.md](RECOVERY.md)).
+`/data/session` persists throughout, and a running kernel is never idle, so a detached task keeps
+going whether or not you poll. State is lost only if the restore **fails**, which surfaces as
+`state_lost` (its `reason` says why) — the one case where you reload your checkpoint and re-run mounts. This is
+why checkpointing expensive state (below) turns any reset into a one-line reload.
 
 ### Checkpointing
 
@@ -225,10 +226,10 @@ Two consequences worth internalizing:
     - **A long wait is useful time, not dead time.** Read the skill you will need next, or
       check the docs for the step after this one, while the task is in flight — but say that is
       what you are doing, so the interleaved tool calls are legible.
-    - **Recover a lost `task_id`** from `get_status.kernel_status.active_task_id` while the sandbox
-      is still `busy` (it is absent when idle). `get_status.last_task` is the historical handle if
+    - **Recover a lost `task_id`** from `get_status.kernel_status.active_task_id` while `status`
+      is still `"busy"` (it is absent when idle). `get_status.last_task` is the historical handle if
       you lost it entirely.
-    - Use `get_status` alongside for resource progress (`resource_usage`, `busy`) — never for
+    - Use `get_status` alongside for resource progress (`resource_usage`, `status`) — never for
       namespace contents.
 - **`interrupt_task(sandbox_id)`** stops the in-flight task and **keeps the kernel alive**
   (variables, imports, packages, mounts survive); `get_results` then returns the interrupted
