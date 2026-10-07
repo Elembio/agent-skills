@@ -90,8 +90,9 @@ companion files:
   dead:** its variables, imports, and loaded data are intact, and your next `execute_code` /
   `execute_command` on the same `sandbox_id` resumes it automatically. `provisioning`,
   `resuming`, `snapshotting`, `ready`, and `busy` are likewise the same sandbox — keep the id.
-  Only not found, `kernel_lost`, `destroying`, or `kernel_status.alive: false` means
-  `create_sandbox`; a not-found or `kernel_lost` carries a `reason` saying why — tell the user.
+  Only not found, `kernel_lost` or `destroying` means `create_sandbox`; a not-found or
+  `kernel_lost` carries a `reason` saying why — tell the user. `kernel_status.alive: false` on a
+  `ready`/`busy` sandbox is a stuck kernel: `interrupt_task` and poll first (see RECOVERY.md).
 - Only `destroy_sandbox` when the user explicitly asks to end the session.
 - **Subagents get their own sandbox.** Never hand your `sandbox_id` to a subagent (it has no
   credentials for your session and a separate `/data/session`); pass mount metadata in the

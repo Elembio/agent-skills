@@ -85,9 +85,13 @@ Call `get_status` and read only the liveness fields:
   `last_activity_at` — the missing `kernel_status` and `resource_usage` are not a fault. Call
   `execute_code` / `execute_command` on the same `sandbox_id`; it resumes automatically. Never
   `create_sandbox` for it.
-- **`status: "kernel_lost"`, `"destroying"` or `"destroyed"`, `kernel_status.alive: false`** (or a
-  dead-socket reply: `read response: EOF`, `the client session is not running`) → a verdict came
-  back: the kernel cannot work. Now `create_sandbox`, then re-run mounts.
+- **`status: "kernel_lost"` or `"destroying"`** (or a dead-socket reply: `read response: EOF`,
+  `the client session is not running`) → a verdict came back: the kernel cannot work. Tell the
+  user the `reason`, then `create_sandbox` and re-run mounts.
+- **`kernel_status.alive: false` while `status` is `"ready"` or `"busy"`** → the kernel is alive
+  but not answering — usually stuck in its current task. Not a verdict yet: follow
+  [Non-OK `socket_state`](#non-ok-socket_state) below (`interrupt_task`, poll), and only
+  `create_sandbox` if it stays unresponsive after that.
 - **`get_status` itself fails to connect** (`dial guest … after N attempt(s)`, `i/o timeout`,
   `no route to host`) → **no verdict**, only a broken path to a possibly-healthy sandbox. This is
   the one place recreate is the expensive guess. Poll again after ~10 s and keep polling for
