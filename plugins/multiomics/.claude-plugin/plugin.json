@@ -1,0 +1,15 @@
+{
+  "name": "multiomics",
+  "displayName": "ElemBio Multiomics",
+  "version": "0.6.1",
+  "description": "Analysis skills for Element Biosciences AVITI24 multiomic and spatial data — loading, run and cell QC, normalization, dimensionality reduction, clustering, differential expression, imaging and OPS.",
+  "author": {
+    "name": "Element Biosciences",
+    "url": "https://github.com/Elembio"
+  },
+  "homepage": "https://elembio.io",
+  "repository": "https://github.com/Elembio/agent-skills",
+  "license": "Apache-2.0",
+  "keywords": ["elembio", "aviti24", "cytos", "multiomics", "spatial", "single-cell", "spatialdata", "anndata", "scanpy", "skills"],
+  "skills": "./skills/"
+}
