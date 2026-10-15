@@ -15,8 +15,7 @@ How to reach the user's ElemBio Cloud data from inside the sandbox. Detail behin
 This file carries only what the **sandbox runtime** forces or changes.
 
 Contents: [What the sandbox already set up](#the-sandbox-already-did-the-setup) · [What you can reach](#what-you-can-reach)
-· [Mounting](#mounting) · [Reading a `.zarr.zip`](#reading-a-zarrzip)
-· [Getting local files in](#getting-local-files-in-request_upload)
+· [Mounting](#mounting) · [Getting local files in](#getting-local-files-in-request_upload)
 
 ## The sandbox already did the setup
 
@@ -26,6 +25,9 @@ Contents: [What the sandbox already set up](#the-sandbox-already-did-the-setup) 
 - **`ELEMBIO_MOUNT_DETACH=1` is set**, so mount commands daemonize **without** an explicit
   `--detach`: they return synchronously with exit 0 (plus a pid and log path) on success, or a
   non-zero exit with an actionable error on failure. No silent hangs.
+- **`ratarmount` is pre-installed** and Linux FUSE works — skip any `pip install` or macOS FUSE
+  setup a recipe mentions. A ratarmount view is range-reads, not an extraction, so it does not
+  consume the writable budget.
 - **No AWS credentials, by design.** Reach data only through `elembio` subcommands. Every
   bypass is a dead end: `boto3` / `s3fs(anon=True)` / `--no-sign-request`, IMDS
   (`169.254.169.254`), presigned-URL guessing, and `elembio storage download --mode credentials`
@@ -73,10 +75,6 @@ Flags that the sandbox forces or that pay off here:
 - **`--prefix <subpath>/`** — scope a storage connection to just the path you need. Keep the
   **trailing slash**; without it the prefix is treated as a literal key and the mount usually
   lists empty.
-- **`--block-size` / `--readahead`** — the in-AWS benchmark defaults (8 MB block, 8-block
-  readahead) suit most reads; retune to the pattern: `--block-size 1MB --readahead 1` for random,
-  chunk-sized reads (`read_zarr`, exploration); `--block-size 8MB` (or higher) for bulk
-  sequential streaming.
 - **`--cache-size` (in-memory read cache; default 1 GB per mount).** Because the disk cache is
   disabled above, this L1 cache is the *only* cache and it draws on the same RAM as your
   analysis. It is a ceiling, not a reservation — it only fills under heavy reads — but with
@@ -87,32 +85,6 @@ Mounts persist for the life of the session and are **lost on kernel death or a n
 re-run your mount commands after any reset (see [RECOVERY.md](RECOVERY.md)). You rarely need to
 unmount in a session-scoped sandbox; use `elembio unmount <path>` if you must
 (`elembio-cloud-data-access` has the full lifecycle surface).
-
-## Reading a `.zarr.zip`
-
-- **Tables / points — no mount needed.** `Loader` opens a zip natively:
-  `Loader("/storage/<conn-id>/run.zarr.zip")`. This is the common case; do not reach for
-  ratarmount for it.
-- **Rasters / a full `SpatialData` object — FUSE-mount the zip.** `read_zarr` cannot open a zip
-  directly, so expose its contents read-only with **`ratarmount`, which is pre-installed in the
-  sandbox** (no `pip install`, and none of the macOS FUSE setup the generic recipe mentions —
-  this is Linux). The mount is a view over range-reads, not an extraction, so it does not
-  consume the writable budget:
-
-```bash
-# via execute_command — mountpoint is an empty scratch dir under /tmp
-mkdir -p /tmp/store
-ratarmount /storage/<conn-id>/run.zarr.zip /tmp/store
-```
-
-```python
-import spatialdata as sd
-# point read_zarr at the nested .zarr path inside the mount
-sdata = sd.read_zarr("/tmp/store/run.zarr")
-```
-
-Full recipe, fallbacks, and the `Loader(sdata)` handoff live in the multiomics
-`spatialdata-loading-and-access` skill.
 
 ## Getting local files in (`request_upload`)
 

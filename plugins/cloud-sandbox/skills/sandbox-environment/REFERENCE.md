@@ -95,8 +95,7 @@ Budget hygiene:
 - Keep high-`fsync` workloads (e.g. SQLite committing in a loop) **off** `/data/session` — each
   commit blocks on a FUSE-to-S3 upload.
 
-Getting data in — mount conventions, mandatory flags, the `ratarmount` recipe, and
-`request_upload` — is its own topic: see **[MOUNTING.md](MOUNTING.md)**. The budget rule: mount
+Getting data in — mount conventions, mandatory flags, and `request_upload` — is its own topic: see **[MOUNTING.md](MOUNTING.md)**. The budget rule: mount
 and read in place; never copy a remote store into `/data/session`.
 
 ## Reusing kernel state across turns
@@ -179,8 +178,8 @@ user out loud (see **Keeping the user in the loop** in [SKILL.md](SKILL.md)) and
 |---|---|
 | `elembio … mount` | ~1 s (detached; the FUSE mount is live on return) |
 | `ls` / `find` over a mount | well under a second per listing — but each one is an S3 round trip |
-| `Loader(<store>)` + `available_tables` | **seconds, even on a 45 GB `.zarr.zip`** — it opens the archive index, it does not read tables |
-| **First `load_tables(..., lazy=True)` per store** | **tens of seconds to minutes — this is the expensive call.** Parses every table's metadata over FUSE, uncached. Measured at 98 s on a 45 GB `.zarr.zip`, which detached. |
+| `Loader(<store>)` + `available_tables` | **seconds, even on a 45 GB store** — it opens the archive index, it does not read tables |
+| **First `load_tables(..., lazy=True)` per store** | **tens of seconds to minutes — this is the expensive call.** Parses every table's metadata over FUSE, uncached. Measured at 98 s on a 45 GB store, which detached. |
 | Reading from a table already loaded | seconds — the first `load_tables` is what paid for it |
 | Reading `obs` / `obsm` columns, groupbys over them | seconds |
 | A full pass over `X` | not measured here; a 6-of-95-chunk sample was ~3 s warm, so budget minutes cold and sample unless you need every cell |

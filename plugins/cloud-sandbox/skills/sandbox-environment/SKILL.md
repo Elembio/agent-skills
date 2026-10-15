@@ -2,7 +2,7 @@
 name: sandbox-environment
 description: "Use when working with Element Biosciences / AVITI / AVITI24 data through the ElemBio Cloud sandbox MCP (`elembio-sandbox`) — listing or resolving runs, executions, or cloud storage; mounting data; or running multiomics, single-cell, spatial, imaging, OPS, QC, or differential-expression analysis. Everything runs inside the sandbox: create one and reuse it, run `elembio …` there via `execute_command` (preinstalled and signed in as the user), mount cloud data in place, and drive the analysis with the Element Biosciences `multiomics` skills (QC, normalization, and modality-specific pipelines) on the preinstalled stack (spatialdata / scanpy / anndata / squidpy)."
 metadata:
-  version: 0.8.2
+  version: 0.8.3
   author: elembio
 ---
 
@@ -16,8 +16,7 @@ Three companion files hold the detail that does not belong in this entry point �
 you reach the situation they cover, not before:
 
 - **[MOUNTING.md](MOUNTING.md)** — reaching the user's Cloud data: sandbox mount conventions and
-  mandatory flags, the `ratarmount` recipe for `.zarr.zip`, `request_upload`, and the
-  no-credentials dead-ends.
+  mandatory flags, `request_upload`, and the no-credentials dead-ends.
 - **[REFERENCE.md](REFERENCE.md)** — how to work efficiently in the sandbox: the preinstalled
   stack and installing packages, filesystem and the writable budget, where outputs go and how to
   confirm they are durable, reusing kernel state across turns, checkpointing, long-running
@@ -124,8 +123,8 @@ The sandbox has **no AWS credentials** — reach data only through `elembio-cli`
 and pre-authenticated as the user). **Mount and read Cloud data in place; never copy a remote
 store into `/data/session`** (the ~900 MB writable budget will `ENOSPC` mid-copy).
 
-The mount commands and their mandatory flags, the `ratarmount` recipe for `.zarr.zip`,
-`request_upload` for local files, and the credential dead-ends are in **[MOUNTING.md](MOUNTING.md)**.
+The mount commands and their mandatory flags, `request_upload` for local files, and the
+credential dead-ends are in **[MOUNTING.md](MOUNTING.md)**.
 The canonical `elembio` CLI surface lives in the multiomics `elembio-cloud-data-access` skill.
 
 ## Running the analysis
