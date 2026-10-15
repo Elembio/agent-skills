@@ -2,7 +2,7 @@
 name: sandbox-environment
 description: "Use when working with Element Biosciences / AVITI / AVITI24 data through the ElemBio Cloud sandbox MCP (`elembio-sandbox`) — listing or resolving runs, executions, or cloud storage; mounting data; or running multiomics, single-cell, spatial, imaging, OPS, QC, or differential-expression analysis. Everything runs inside the sandbox: create one and reuse it, run `elembio …` there via `execute_command` (preinstalled and signed in as the user), mount cloud data in place, and drive the analysis with the Element Biosciences `multiomics` skills (QC, normalization, and modality-specific pipelines) on the preinstalled stack (spatialdata / scanpy / anndata / squidpy)."
 metadata:
-  version: 0.8.3
+  version: 0.8.4
   author: elembio
 ---
 
@@ -147,8 +147,8 @@ locally as a plugin — and the two copies can be different versions. Pick one, 
 3. **The locally installed plugin**, referred to by name, when the server does not serve the
    pack (no `multiomics_index_uri`, or reading it reports an unknown namespace). Relative file
    paths from here will not resolve to it.
-4. **Neither available:** install the Element Biosciences multiomics-skills plugin (or ask the
-   user to) rather than substituting ad-hoc analysis.
+4. **Neither available:** install the Element Biosciences `multiomics` plugin
+   (`multiomics@elembio`), or ask the user to, rather than substituting ad-hoc analysis.
 
 Stay in the copy you started with. Mixing a local skill for one step and the server's for
 another can combine instructions from two versions without anyone noticing.
