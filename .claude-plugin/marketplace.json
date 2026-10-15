@@ -5,13 +5,18 @@
   },
   "metadata": {
     "description": "Element Biosciences plugins and agent skills.",
-    "version": "1.6.3"
+    "version": "1.7.0"
   },
   "plugins": [
     {
       "name": "cloud-sandbox",
       "source": "./plugins/cloud-sandbox",
       "description": "ElemBio Cloud sandbox MCP for multiomics, QC, and spatial analysis on your Element Biosciences run data."
+    },
+    {
+      "name": "multiomics",
+      "source": "./plugins/multiomics",
+      "description": "ElemBio AVITI24 multiomic and spatial analysis skills."
     }
   ]
 }
